@@ -76,9 +76,20 @@ def upload_image():
     if file.filename == '':
         return "No selected file.", 400
     
+    # Get the style number for naming the image
+    style = request.form.get('style', '')
+    if not style:
+        return "Style number is required for image upload.", 400
+    
     if file:
-        filename = secure_filename(file.filename)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        # Use standardized naming convention: styleNumber.webp
+        filename = f"{style}.webp"
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        
+        # Save the file, overwriting if it exists
+        file.save(file_path)
+        logging.info(f"Image saved: {file_path}")
+        
         return redirect(url_for('index'))
 
 @app.route('/upload-excel', methods=['POST'])
@@ -101,30 +112,19 @@ def upload_excel():
         if expected_col not in df.columns:
             return f"Column '{expected_col}' is missing in the Excel file.", 400
     
-    # Create a subdirectory for the line sheet images using the title
-    line_sheet_dir = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(title))
-    try:
-        os.makedirs(line_sheet_dir, exist_ok=True)
-        logging.info(f"Line sheet directory '{line_sheet_dir}' created or already exists.")
-    except Exception as e:
-        logging.error(f"Error creating line sheet directory '{line_sheet_dir}': {e}")
-        return f"Error creating directory for line sheet images: {e}", 500
+    # No need to create a subdirectory for each line sheet anymore
+    # Images will stay in the main uploads folder
     
     with sqlite3.connect("products.db") as conn:
         conn.execute("DELETE FROM products")  # Clear existing data
         for _, row in df.iterrows():
             style = row[column_mapping['STYLE#']]
-            image_filename = f"{style}.webp"  # Assuming images are in JPG format
+            image_filename = f"{style}.webp"  # Assuming images are in WEBP format
             
+            # Check if the image exists in the uploads folder
             if os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], image_filename)):
-                try:
-                    # Move the image to the line sheet subdirectory
-                    new_image_path = os.path.join(line_sheet_dir, image_filename)
-                    os.rename(os.path.join(app.config['UPLOAD_FOLDER'], image_filename), new_image_path)
-                    image_path = os.path.relpath(new_image_path, 'static')
-                except Exception as e:
-                    logging.error(f"Error moving image {image_filename}: {e}")
-                    image_path = ''
+                # Use a relative path from 'static' to the image
+                image_path = os.path.join('uploads', image_filename)
             else:
                 image_path = ''  # Handle missing images
             
@@ -156,6 +156,7 @@ def upload_excel():
 
 @app.route('/line_sheets')
 def line_sheets():
+    # This route should also be accessible without authentication
     title = request.args.get('title', 'MINKAS LINE SHEETS')
     with sqlite3.connect("products.db") as conn:
         products = conn.execute("SELECT * FROM products").fetchall()
@@ -167,13 +168,42 @@ def line_sheets():
 
 @app.route('/list_line_sheets')
 def list_line_sheets():
+    # This route should also be accessible without authentication
     with sqlite3.connect("products.db") as conn:
         line_sheets = conn.execute("SELECT * FROM line_sheets ORDER BY created_at DESC").fetchall()
     return render_template('list_line_sheets.html', line_sheets=line_sheets)
 
 @app.route('/view_line_sheet/<filename>')
 def view_line_sheet(filename):
+    # This route should be accessible without authentication
+    try:
+        # Get the line sheet information from the database
+        with sqlite3.connect("products.db") as conn:
+            line_sheet = conn.execute(
+                "SELECT * FROM line_sheets WHERE filename = ?", 
+                (filename,)
+            ).fetchone()
+            
+            if line_sheet:
+                title = line_sheet[1]  # Title is stored in the second column
+                
+                # We could try parsing the HTML, but a simpler approach is to just query the database
+                # for all products and display them - the sorting in PhotoSwipe will work
+                with sqlite3.connect("products.db") as conn:
+                    products = conn.execute("SELECT * FROM products").fetchall()
+                
+                # Filter out incomplete entries
+                products = [product for product in products if all(product)]
+                
+                # Render the line_sheets template with the products data
+                return render_template('line_sheets.html', products=products, title=title, pdf_view=False)
+    
+    except Exception as e:
+        logging.error(f"Error rendering line sheet {filename}: {e}")
+        logging.error(f"Error details: {str(e)}")
+    
+    # Fallback to direct redirect if any issues occur
     return redirect(url_for('static', filename=filename))
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5000)

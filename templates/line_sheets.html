@@ -1,254 +1,458 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Line Sheet Data</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/default-skin/default-skin.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --pswp-bg-opacity: 0; /* Background opacity */
-            --pswp-control-bg-opacity: 0; /* Control background opacity */
-            --pswp-control-color: #1a0b0b; /* Control text color (white) */
-        }
-        body {
-            margin: 0;
-            font-family: 'times new roman', 'poppins', sans-serif; /* Added 'times new roman' font */
-            color: rgb(21, 21, 21); /* Matt black font color */
-        }
-        .content-text {
-            font-size: 0.5em;
-        }
-        .content-result {
-            font-size: 0.9em;
-            word-wrap: break-word;
-        }
-        .image-container img {
-            transition: transform 0.2s;
-        }
-        .image-container img:hover {
-            transform: scale(1.05);
-        }
-        .blurred {
-            filter: blur(10px);
-            background-color: rgba(0, 0, 0, 0.7); /* Black tint */
-        }
-        /* Custom PhotoSwipe theme */
-        .pswp__bg {
-            background-color: rgba(26, 32, 44, var(--pswp-bg-opacity)) !important; /* Transparent background */
-        }
-        .pswp__top-bar,
-        .pswp__caption,
-        .pswp__button--close,
-        .pswp__button--fs,
-        .pswp__button--zoom,
-        .pswp__button--arrow--left,
-        .pswp__button--arrow--right {
-            background-color: rgba(45, 55, 72, var(--pswp-control-bg-opacity)) !important; /* Transparent background for controls */
-            color: var(--pswp-control-color) !important; /* White text color */
-        }
-        .pswp__button--close:before,
-        .pswp__button--fs:before,
-        .pswp__button--zoom:before,
-        .pswp__button--arrow--left:before,
-        .pswp__button--arrow--right:before {
-            color: var(--pswp-control-color) !important; /* White icon color */
-        }
-        .pswp__caption__center {
-            font-size: 1.2em;
-            font-weight: bold;
-            text-align: center;
-            white-space: nowrap;
-            color: var(--pswp-control-color) !important; /* White text color */
-        }
-        .pswp__img {
-            border: 10px solid white; /* 10px border */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Shadow effect */
-        }
-        .pswp__button {
-            margin-right: 10px; /* Add space between buttons */
-        }
+{% extends 'base.html' %}
 
-        @media print {
-    /* Remove grey background */
-    body, #content-wrapper {
-        background: white !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-        box-shadow: none !important;
+{% block title %}{{ title }} - Line Sheet Data{% endblock %}
+
+{% block additional_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+{% endblock %}
+
+{% block additional_styles %}
+<style>
+    :root {
+        --pswp-bg-opacity: 0.7; /* Dark background to make controls visible */
+        --pswp-control-bg-opacity: 0; /* Transparent controls background */
+        --pswp-control-color: #ffffff; /* White control color for visibility */
     }
-
-    /* Remove link styles */
-    a {
-        color: black !important;
-        text-decoration: none !important;
-        pointer-events: none !important; /* Disables clicking */
+    body {
+        margin: 0;
+        font-family: 'times new roman', 'poppins', sans-serif;
+        color: rgb(21, 21, 21);
     }
-
-    /* Remove image shadows and borders */
+    .content-text {
+        font-size: 0.5em;
+    }
+    .content-result {
+        font-size: 0.9em;
+        word-wrap: break-word;
+    }
     .image-container img {
-        box-shadow: none !important;
-        border: none !important;
+        transition: transform 0.2s;
     }
-
-    /* Hide PhotoSwipe elements */
-    .pswp__bg, .pswp__top-bar, .pswp__button, .pswp__caption {
+    .image-container img:hover {
+        transform: scale(1.05);
+    }
+    .blurred {
+        filter: blur(10px);
+        background-color: rgba(0, 0, 0, 0.7);
+    }
+    
+    /* PhotoSwipe theme with subtle ombre */
+    .pswp__bg {
+        background: linear-gradient(to bottom, rgb(255, 255, 255), rgba(157, 157, 157, 0.6)) !important;
+    }
+    
+    /* Top bar with subtle gradient */
+    .pswp__top-bar {
+        background: rgba(255, 255, 255, 0) !important;
+        height: 44px !important;
+        padding: 0 10px !important;
+    }
+    
+    /* Hide tooltips */
+    .pswp__button[title]:hover::after {
         display: none !important;
     }
-}
+    
+    /* Make buttons visible but subtle */
+    .pswp__button {
+        opacity: 1 !important;
+        margin: 0 8px !important;
+        color: rgb(69, 69, 69) !important;
+        background-color: white !important;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3) !important;
+        border-radius: 50% !important;
+    }
+    
+    /* Arrow buttons need special treatment */
+    .pswp__button--arrow--left:before,
+    .pswp__button--arrow--right:before {
+        background-color: white !important;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3) !important;
+    }
+    
+    /* Fix icon colors */
+    .pswp__button--close,
+    .pswp__button--fs,
+    .pswp__button--zoom {
+        filter: none !important;
+        opacity: 0.8 !important;
+    }
+    
+    /* Remove the SVG filter that was making icons white */
+    .pswp__button svg {
+        filter: none !important;
+    }
+    
+    /* Position arrows away from edges but still visible */
+    .pswp__button--arrow--left {
+        left: 20px !important;
+    }
+    
+    .pswp__button--arrow--right {
+        right: 20px !important;
+    }
+    
+    /* Custom download button */
+    .pswp__custom-download {
+        position: absolute !important;
+        right: 200px !important; /* Positioned further left */
+        top: 5px !important;
+        z-index: 100 !important;
+    }
+    
+    /* Hide default download button */
+    .pswp__button--download {
+        display: none !important;
+    }
+    
+    /* Simple caption */
+    .pswp__caption {
+        background: rgba(255, 255, 255, 0) !important;
+    }
+    
+    .pswp__caption__center {
+        text-align: center !important;
+        max-width: 80% !important;
+        font-size: 20px !important;
+        color: rgb(69, 69, 69) !important;
+    }
+    
+    .pswp__img {
+        border: 10px solid white;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
 
-        /* Styles for generated PDF */
-        .pdf-view .image-container img {
+    @media print {
+        /* Remove grey background */
+        body, #content-wrapper {
+            background: white !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            box-shadow: none !important;
+        }
+
+        /* Remove link styles */
+        a {
+            color: black !important;
+            text-decoration: none !important;
+            pointer-events: none !important;
+        }
+
+        /* Remove image shadows and borders */
+        .image-container img {
             box-shadow: none !important;
             border: none !important;
-            transform: none !important;
         }
-        .pdf-view a {
-            pointer-events: none;
-            text-decoration: none;
-            color: black;
-        }
-        .pdf-view .pswp__bg,
-        .pdf-view .pswp__top-bar,
-        .pdf-view .pswp__button,
-        .pdf-view .pswp__caption {
+
+        /* Hide PhotoSwipe elements */
+        .pswp__bg, .pswp__top-bar, .pswp__button, .pswp__caption {
             display: none !important;
         }
-    </style>
-</head>
-<body class="bg-gray-100 p-2 {{ 'pdf-view' if pdf_view else '' }}">
+    }
 
-    <div id="content-wrapper" class="max-w-full mx-auto bg-white p-4 rounded-lg shadow-lg">
-        <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
-            <div class="flex-1 text-center">
-                <h1 class="text-3xl font-bold uppercase italic">{{ title }}</h1> <!-- Increased font size -->
-            </div>
-            <div class="flex-shrink-0 mt-2 sm:mt-0">
-                <button onclick="openFile()" type="button" class="text-xl text-white bg-[#7D563E] hover:bg-[#7D563E]/90 focus:ring-4 focus:outline-none focus:ring-[#7D563E]/50 rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:focus:ring-[#7D563E]/50 dark:hover:bg-[#7D563E]/30 me-2 mb-2">
-                    ALBUM PRICE LIST
-                    </button>
-            </div>
+    /* Styles for generated PDF */
+    .pdf-view .image-container img {
+        box-shadow: none !important;
+        border: none !important;
+        transform: none !important;
+    }
+    .pdf-view a {
+        pointer-events: none;
+        text-decoration: none;
+        color: black;
+    }
+    .pdf-view .pswp__bg,
+    .pdf-view .pswp__top-bar,
+    .pdf-view .pswp__button,
+    .pdf-view .pswp__caption {
+        display: none !important;
+    }
+
+    /* Hide default PhotoSwipe buttons */
+    .pswp__button--close, 
+    .pswp__button--fs, 
+    .pswp__button--zoom,
+    .pswp__button--arrow--left,
+    .pswp__button--arrow--right {
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+
+    /* Custom buttons container styles */
+    .pswp__custom-buttons {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        display: flex;
+        z-index: 100;
+        gap: 8px;
+    }
+    
+    /* Arrow button containers */
+    .pswp__custom-prev {
+        position: absolute;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 100;
+    }
+    
+    .pswp__custom-next {
+        position: absolute;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 100;
+    }
+</style>
+{% endblock %}
+
+{% block body_classes %}{{ 'pdf-view' if pdf_view else '' }}{% endblock %}
+
+{% block container_classes %}max-w-full mx-auto p-4 shadow-lg{% endblock %}
+
+{% block header %}
+<div class="flex flex-col sm:flex-row justify-between items-center mb-4">
+    <div class="flex-1 text-center">
+        <h1 class="text-3xl font-bold uppercase italic">{{ title }}</h1>
+    </div>
+    <div class="flex-shrink-0 mt-2 sm:mt-0">
+        <button onclick="openFile()" type="button" class="text-xl text-white bg-[#7D563E] hover:bg-[#7D563E]/90 focus:ring-4 focus:outline-none focus:ring-[#7D563E]/50 rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:focus:ring-[#7D563E]/50 dark:hover:bg-[#7D563E]/30 me-2 mb-2">
+            ALBUM PRICE LIST
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-wrapper" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mt-2">
+    {% for product in products %}
+    <div class="text-xl border p-2 rounded-lg bg-white shadow-lg text-left image-container">
+        <a href="{{ url_for('static', filename=product[6]) }}" data-caption="Style #: {{ product[1] }} | Price: ${{ "%.2f"|format(product[5]|float) }}">
+            <img src="{{ url_for('static', filename=product[6]) }}" class="w-full h-80 object-contain rounded-lg">
+        </a>
+        <div class="border-t mt-2 pt-2">
+            <strong>Style #:</strong> <span class="ml-2">{{ product[1] }}</span>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mt-2">
-            {% for product in products %}
-            <div class="text-xl border p-2 rounded-lg bg-white shadow-lg text-left image-container">
-                <a href="{{ url_for('static', filename=product[6]) }}" data-caption="Style #: {{ product[1] }} | Price: ${{ "%.2f"|format(product[5]|float) }}">
-                    <img src="{{ url_for('static', filename=product[6]) }}" class="w-full h-80 object-contain rounded-lg">
-                </a>
-                <div class="border-t mt-2 pt-2">
-                    <strong>Style #:</strong> <span class="ml-2">{{ product[1] }}</span>
-                </div>
-                <div class="border-t mt-2 pt-2">
-                    <strong>Colors:</strong> <span class="ml-2">{{ product[2] }}</span>
-                </div>
-                <div class="border-t mt-2 pt-2">
-                    <strong>Content:</strong> <span class="ml-2 content-result">{{ product[3] }}</span>
-                </div>
-                <div class="border-t mt-2 pt-2">
-                    <strong>Sizes:</strong> <span class="ml-2">{{ product[4] }}</span>
-                </div>
-                <div class="border-t mt-2 pt-2">
-                    <strong>Price:</strong> <span class="ml-2">${{ "%.2f"|format(product[5]|float) }}</span>
-                </div>
-            </div>
-            {% endfor %}
+        <div class="border-t mt-2 pt-2">
+            <strong>Colors:</strong> <span class="ml-2">{{ product[2] }}</span>
+        </div>
+        <div class="border-t mt-2 pt-2">
+            <strong>Content:</strong> <span class="ml-2 content-result">{{ product[3] }}</span>
+        </div>
+        <div class="border-t mt-2 pt-2">
+            <strong>Sizes:</strong> <span class="ml-2">{{ product[4] }}</span>
+        </div>
+        <div class="border-t mt-2 pt-2">
+            <strong>Price:</strong> <span class="ml-2">${{ "%.2f"|format(product[5]|float) }}</span>
         </div>
     </div>
+    {% endfor %}
+</div>
+{% endblock %}
 
-    <!-- PhotoSwipe Core -->
-    <div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="pswp__bg"></div>
-        <div class="pswp__scroll-wrap">
-            <div class="pswp__container">
-                <div class="pswp__item"></div>
-                <div class="pswp__item"></div>
-                <div class="pswp__item"></div>
-            </div>
-            <div class="pswp__ui pswp__ui--hidden">
-                <div class="pswp__top-bar">
-                    <div class="pswp__counter"></div>
-                    <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
-                    <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
-                    <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
-                    <div class="pswp__preloader">
-                        <div class="pswp__preloader__icn">
-                            <div class="pswp__preloader__cut">
-                                <div class="pswp__preloader__donut"></div>
-                            </div>
+{% block outside_container %}
+<!-- PhotoSwipe Core -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="pswp__bg"></div>
+    <div class="pswp__scroll-wrap">
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+        <div class="pswp__ui pswp__ui--hidden">
+            <div class="pswp__top-bar">
+                <div class="pswp__counter"></div>
+                
+                <!-- Original PhotoSwipe buttons (hidden but kept for functionality) -->
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
                         </div>
                     </div>
                 </div>
-                <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
-                    <div class="pswp__share-tooltip"></div>
-                </div>
-                <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)"></button>
-                <button class="pswp__button--arrow--right" title="Next (arrow right)"></button>
-                <div class="pswp__caption">
-                    <div class="pswp__caption__center"></div>
-                </div>
-                <button class="pswp__button pswp__button--download" title="Download">
-                    <a href="#" download>
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
-                            <path fill-rule="evenodd" d="M12 2a1 1 0 011 1v12.586l3.293-3.293a1 1 0 011.414 1.414l-5 5a1 1 0 01-1.414 0l-5-5a1 1 0 011.414-1.414L11 15.586V3a1 1 0 011-1z" clip-rule="evenodd" />
-                            <path fill-rule="evenodd" d="M4 18a1 1 0 011-1h14a1 1 0 110 2H5a1 1 0 01-1-1z" clip-rule="evenodd" />
+                
+                <!-- Custom Tailwind Buttons -->
+                <div class="pswp__custom-buttons">
+                    <!-- Close Button -->
+                    <button class="pswp__custom-close bg-white hover:bg-gray-100 text-[rgb(69,69,69)] font-bold py-2 px-4 rounded inline-flex items-center shadow">
+                        <svg class="fill-current w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <path d="M10 8.586L2.929 1.515 1.515 2.929 8.586 10l-7.071 7.071 1.414 1.414L10 11.414l7.071 7.071 1.414-1.414L11.414 10l7.071-7.071-1.414-1.414L10 8.586z"/>
                         </svg>
+                    </button>
+                    
+                    <!-- Fullscreen Button -->
+                    <button class="pswp__custom-fs bg-white hover:bg-gray-100 text-[rgb(69,69,69)] font-bold py-2 px-4 rounded inline-flex items-center shadow">
+                        <svg class="fill-current w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <path d="M1 1h6v2H3v4H1V1zm18 0h-6v2h4v4h2V1zM1 19h6v-2H3v-4H1v6zm18 0h-6v-2h4v-4h2v6z"/>
+                        </svg>
+                    </button>
+                    
+                    <!-- Zoom Button -->
+                    <button class="pswp__custom-zoom bg-white hover:bg-gray-100 text-[rgb(69,69,69)] font-bold py-2 px-4 rounded inline-flex items-center shadow">
+                        <svg class="fill-current w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <path d="M12.9 14.32a8 8 0 1 1 1.41-1.41l5.35 5.33-1.42 1.42-5.33-5.34zM8 14A6 6 0 1 0 8 2a6 6 0 0 0 0 12zM7 7V5h2v2h2v2H9v2H7V9H5V7h2z"/>
+                        </svg>
+                    </button>
+                    
+                    <!-- Download Button -->
+                    <a href="#" download class="pswp__custom-download bg-white hover:bg-gray-100 text-[rgb(69,69,69)] font-bold py-2 px-4 rounded inline-flex items-center shadow">
+                        <svg class="fill-current w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <path d="M13 8V2H7v6H2l8 8 8-8h-5zM0 18h20v2H0v-2z"/>
+                        </svg>
+                        <span>Download</span>
                     </a>
+                </div>
+                
+                <!-- Custom Arrow Buttons -->
+                <div class="pswp__custom-prev">
+                    <button class="bg-white hover:bg-gray-100 text-[rgb(69,69,69)] font-bold py-2 px-4 rounded inline-flex items-center shadow">
+                        <svg class="fill-current w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <path d="M3.828 9l6.071-6.071-1.414-1.414L0 10l.707.707 7.778 7.778 1.414-1.414L3.828 11H20V9H3.828z"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="pswp__custom-next">
+                    <button class="bg-white hover:bg-gray-100 text-[rgb(69,69,69)] font-bold py-2 px-4 rounded inline-flex items-center shadow">
+                        <svg class="fill-current w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <path d="M16.172 9l-6.071-6.071 1.414-1.414L20 10l-.707.707-7.778 7.778-1.414-1.414L16.172 11H0V9z"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Original button hidden but kept for functionality -->
+                <button class="pswp__button pswp__button--download" title="Download">
+                    <a href="#" download></a>
                 </button>
+            </div>
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)"></button>
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)"></button>
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
             </div>
         </div>
     </div>
+</div>
+{% endblock %}
 
-    <script>
-        function openFile() {
-            window.open("{{ url_for('static', filename='FW25 ALBUM PRICE LIST.pdf') }}", '_blank');
-        }
+{% block scripts %}
+<script>
+    function openFile() {
+        window.open("{{ url_for('static', filename='FW25 ALBUM PRICE LIST.pdf') }}", '_blank');
+    }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            var pswpElement = document.querySelectorAll('.pswp')[0];
-            var items = [];
-            document.querySelectorAll('.image-container a').forEach(function(el) {
+    document.addEventListener('DOMContentLoaded', function() {
+        var pswpElement = document.querySelectorAll('.pswp')[0];
+        var imageElements = document.querySelectorAll('.image-container a');
+        
+        // Create an array of promises to load all images
+        var imagePromises = Array.from(imageElements).map(function(el) {
+            return new Promise(function(resolve) {
                 var img = new Image();
                 img.src = el.getAttribute('href');
-
                 img.onload = function() {
-                    items.push({
+                    resolve({
+                        element: el,
+                        style: el.getAttribute('data-caption').split('|')[0].split(':')[1].trim(),
                         src: img.src,
-                        w: img.naturalWidth,  // Get actual width
-                        h: img.naturalHeight,  // Get actual height
-                        title: el.getAttribute('data-caption')  // Get caption
+                        w: img.naturalWidth,
+                        h: img.naturalHeight,
+                        title: el.getAttribute('data-caption')
                     });
                 };
             });
+        });
 
-            document.querySelectorAll('.image-container a').forEach(function(el, index) {
+        // Wait for all images to load and then sort them
+        Promise.all(imagePromises).then(function(loadedItems) {
+            // Sort items by style number
+            loadedItems.sort(function(a, b) {
+                return a.style.localeCompare(b.style);
+            });
+
+            // Add sorted items to the gallery
+            items = loadedItems.map(function(item) {
+                return {
+                    src: item.src,
+                    w: item.w,
+                    h: item.h,
+                    title: item.title
+                };
+            });
+
+            // Add click handlers to all image elements
+            imageElements.forEach(function(el, index) {
                 el.addEventListener('click', function(event) {
                     event.preventDefault();
+                    // Find the correct index in the sorted array
+                    var style = el.getAttribute('data-caption').split('|')[0].split(':')[1].trim();
+                    var sortedIndex = loadedItems.findIndex(function(item) {
+                        return item.style === style;
+                    });
+                    
                     var options = {
-                        index: index,
+                        index: sortedIndex,
                         bgOpacity: 0.7,
                         showHideOpacity: true
                     };
                     var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, options);
+                    
+                    // Wire up custom buttons
+                    gallery.listen('afterChange', function() {
+                        // Update download button href
+                        document.querySelector('.pswp__custom-download').href = items[gallery.getCurrentIndex()].src;
+                        document.querySelector('.pswp__button--download a').href = items[gallery.getCurrentIndex()].src;
+                    });
+                    
+                    // Close button
+                    document.querySelector('.pswp__custom-close').addEventListener('click', function() {
+                        gallery.close();
+                    });
+                    
+                    // Fullscreen button
+                    document.querySelector('.pswp__custom-fs').addEventListener('click', function() {
+                        document.querySelector('.pswp__button--fs').click();
+                    });
+                    
+                    // Zoom button
+                    document.querySelector('.pswp__custom-zoom').addEventListener('click', function() {
+                        document.querySelector('.pswp__button--zoom').click();
+                    });
+                    
+                    // Previous arrow
+                    document.querySelector('.pswp__custom-prev button').addEventListener('click', function() {
+                        gallery.prev();
+                    });
+                    
+                    // Next arrow
+                    document.querySelector('.pswp__custom-next button').addEventListener('click', function() {
+                        gallery.next();
+                    });
+                    
                     gallery.listen('beforeChange', function() {
                         document.getElementById('content-wrapper').classList.add('blurred');
                     });
+                    
                     gallery.listen('close', function() {
                         document.getElementById('content-wrapper').classList.remove('blurred');
                     });
-                    gallery.listen('afterChange', function() {
-                        var downloadButton = document.querySelector('.pswp__button--download a');
-                        downloadButton.href = items[gallery.getCurrentIndex()].src;
-                    });
+                    
                     gallery.init();
                 });
             });
         });
-    </script>
-
-</body>
-</html>
+    });
+</script>
+{% endblock %}

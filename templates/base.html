@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Line Sheet Manager{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    
+    {% block additional_head %}{% endblock %}
+    
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            color: rgb(21, 21, 21); /* Matt black font color */
+        }
+    </style>
+    {% block additional_styles %}{% endblock %}
+</head>
+<body class="bg-gray-100 p-5 {% block body_classes %}{% endblock %}">
+    <div class="{% block container_classes %}max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-lg{% endblock %}">
+        {% block header %}
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold">{% block header_title %}Line Sheet Manager{% endblock %}</h1>
+            {% block header_actions %}{% endblock %}
+        </div>
+        {% endblock %}
+        
+        {% block content %}{% endblock %}
+    </div>
+    
+    {% block outside_container %}{% endblock %}
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html> 
