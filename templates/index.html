@@ -17,34 +17,4 @@
     </form>
     <p class="text-sm text-gray-500 mt-2">Note: Images should be placed in the static/uploads folder with filenames matching the style numbers (e.g., STYLE123.webp)</p>
 </div>
-
-<!-- Commented Out for Now -->
-<!-- <h2 class="text-2xl font-bold mt-6">Current Products</h2>
-<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
-    {% for product in products %}
-    <div class="border p-4 rounded-lg bg-white text-center">
-        <img src="{{ url_for('static', filename=product[6]) }}" class="w-full h-80 object-cover rounded-lg">
-        <div class="flex justify-center border-t mt-2 pt-2">
-            <strong>Style #:</strong> <span class="ml-2">{{ product[1] }}</span>
-        </div>
-        <div class="flex justify-center border-t mt-2 pt-2">
-            <strong>Content:</strong> <span class="ml-2">{{ product[3] }}</span>
-        </div>
-        <div class="flex justify-center border-t mt-2 pt-2">
-            <strong>Sizes:</strong> <span class="ml-2">{{ product[4] }}</span>
-        </div>
-        <div class="flex justify-center border-t mt-2 pt-2">
-            <strong>Price:</strong> <span class="ml-2">$ {{ "%.2f"|format(product[5]|float) }}</span>
-        </div>
-        <div class="mt-2">
-            <a href="{{ url_for('static', filename=product[6]) }}" download class="text-blue-500 hover:underline">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3" />
-                </svg>
-                Download
-            </a>
-        </div>
-    </div>
-    {% endfor %}
-</div> -->
 {% endblock %}
