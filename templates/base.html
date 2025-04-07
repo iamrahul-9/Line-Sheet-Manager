@@ -14,10 +14,38 @@
             font-family: 'Poppins', sans-serif;
             color: rgb(21, 21, 21); /* Matt black font color */
         }
+        
+        /* Loader Styles */
+        .loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        
+        .loader-hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
     </style>
     {% block additional_styles %}{% endblock %}
 </head>
 <body class="bg-gray-100 p-5 {% block body_classes %}{% endblock %}">
+    <!-- Loading Overlay -->
+    <div id="loader-overlay" class="loader-overlay">
+        <div class="flex flex-col items-center">
+            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
+            <p class="mt-4 text-gray-700 font-medium">Loading...</p>
+        </div>
+    </div>
+    
     <div class="{% block container_classes %}max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-lg{% endblock %}">
         {% block header %}
         <div class="flex justify-between items-center mb-6">
@@ -32,5 +60,22 @@
     {% block outside_container %}{% endblock %}
     
     {% block scripts %}{% endblock %}
+    
+    <!-- Loader Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hide loader when page is fully loaded
+            window.addEventListener('load', function() {
+                const loader = document.getElementById('loader-overlay');
+                loader.classList.add('loader-hidden');
+            });
+            
+            // Also hide loader if it's been visible for too long (fallback)
+            setTimeout(function() {
+                const loader = document.getElementById('loader-overlay');
+                loader.classList.add('loader-hidden');
+            }, 3000);
+        });
+    </script>
 </body>
 </html> 

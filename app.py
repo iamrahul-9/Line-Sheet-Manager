@@ -5,6 +5,7 @@ import pandas as pd
 from werkzeug.utils import secure_filename
 from datetime import datetime
 import logging
+import re
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
@@ -141,9 +142,13 @@ def upload_excel():
     
     rendered_html = render_template('line_sheets.html', products=products, title=title, pdf_view=True)
     
-    # Save the rendered HTML to a file with a unique filename
-    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-    filename = f'line_sheets_{timestamp}.html'
+    # Create a filename from the title: convert to lowercase and replace spaces and special characters with underscores
+    formatted_title = re.sub(r'[^\w\s]', '_', title.lower())  # Replace non-alphanumeric chars with underscore
+    formatted_title = re.sub(r'\s+', '_', formatted_title)    # Replace spaces with underscore
+    formatted_title = re.sub(r'_+', '_', formatted_title)     # Replace multiple underscores with a single one
+    
+    # Save the rendered HTML to a file with the formatted title as filename
+    filename = f'{formatted_title}.html'
     filepath = os.path.join('static', filename)
     with open(filepath, 'w') as file:
         file.write(rendered_html)
