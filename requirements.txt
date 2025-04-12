@@ -3,4 +3,5 @@ Werkzeug
 pandas
 openpyxl
 Jinja2
+cloudinary
 gunicorn

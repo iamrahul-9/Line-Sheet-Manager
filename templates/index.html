@@ -1,57 +1,364 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Line Sheet Manager</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            color: rgb(21, 21, 21); /* Matt black font color */
-        }
-    </style>
-</head>
-<body class="bg-gray-100 p-5"></body>
+{% extends 'base.html' %}
 
-    <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-lg">
-        <h2 class="text-2xl font-bold mb-4">Upload Excel File</h2>
-        <form action="/upload-excel" method="post" enctype="multipart/form-data" class="mb-6">
-            <input type="text" name="title" placeholder="Enter Title" required class="border p-2 rounded-lg mb-4 w-full">
-            <input type="file" name="excel" required class="border p-2 rounded-lg mb-4 w-full">
-            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg">Submit</button>
-        </form>
+{% block title %}Line Sheet Manager{% endblock %}
 
-        <!-- <h2 class="text-2xl font-bold mt-6">Current Products</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
-            {% for product in products %}
-            <div class="border p-4 rounded-lg bg-white text-center">
-                <img src="{{ url_for('static', filename='uploads/' + product[6]) }}" class="w-full h-80 object-cover rounded-lg">
-                <div class="flex justify-center border-t mt-2 pt-2">
-                    <strong>Style #:</strong> <span class="ml-2">{{ product[1] }}</span>
-                </div>
-                <div class="flex justify-center border-t mt-2 pt-2">
-                    <strong>Content:</strong> <span class="ml-2">{{ product[3] }}</span>
-                </div>
-                <div class="flex justify-center border-t mt-2 pt-2">
-                    <strong>Sizes:</strong> <span class="ml-2">{{ product[4] }}</span>
-                </div>
-                <div class="flex justify-center border-t mt-2 pt-2">
-                    <strong>Price:</strong> <span class="ml-2">$ {{ "%.2f"|format(product[5]|float) }}</span>
-                </div>
-                <div class="mt-2">
-                    <a href="{{ url_for('static', filename='uploads/' + product[6]) }}" download class="text-blue-500 hover:underline">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3" />
-                        </svg>
-                        Download
-                    </a>
-                </div>
+{% block additional_styles %}
+<style>
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .main-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .section-card {
+    background-color: var(--color-bg-secondary);
+    border-radius: 0.75rem;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 1px 3px var(--shadow-color);
+  }
+  
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .section-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+    position: relative;
+  }
+  
+  .form-label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  
+  .form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--color-input-border);
+    border-radius: 8px;
+    font-size: 16px;
+    position: relative;
+    z-index: 1;
+    background-color: var(--color-input-bg);
+    color: var(--color-text-primary);
+  }
+  
+  /* Custom file input styling */
+  input[type="file"] {
+    color: transparent;
+    width: 150px;
+  }
+  
+  input[type="file"]::-webkit-file-upload-button {
+    visibility: hidden;
+  }
+  
+  .file-input-container {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .file-input-container::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 150px;
+    height: 100%;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    pointer-events: none;
+  }
+  
+  .indigo-container::after {
+    background-color: #e0e7ff;
+    color: #4f46e5;
+    border: 1px solid #c7d2fe;
+  }
+  
+  .dark .indigo-container::after {
+    background-color: rgba(79, 70, 229, 0.2);
+    color: #818cf8;
+    border: 1px solid rgba(99, 102, 241, 0.4);
+  }
+  
+  .purple-container::after {
+    background-color: #f3e8ff;
+    color: #9333ea;
+    border: 1px solid #e9d5ff;
+  }
+  
+  .dark .purple-container::after {
+    background-color: rgba(147, 51, 234, 0.2);
+    color: #c084fc;
+    border: 1px solid rgba(147, 51, 234, 0.4);
+  }
+  
+  .form-text {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin-top: 4px;
+  }
+  
+  .required {
+    color: #6d28d9;
+  }
+  
+  .dark .required {
+    color: #a78bfa;
+  }
+  
+  .btn-primary {
+    background-image: linear-gradient(to right, #6366f1, #8b5cf6);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    z-index: 10;
+  }
+  
+  .alert-info {
+    background-color: #f5f3ff;
+    border: 1px solid #e9d5ff;
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 15px;
+  }
+  
+  .dark .alert-info {
+    background-color: rgba(124, 58, 237, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+  }
+  
+  .gradient-border {
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    overflow: hidden;
+  }
+</style>
+{% endblock %}
+
+{% block header_actions %}
+<a href="/list_line_sheets" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-600 text-white px-5 py-2.5 rounded-lg transition-all shadow-sm hover:shadow-md">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+    <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" />
+  </svg>
+  View Line Sheets
+</a>
+{% endblock %}
+
+{% block container_classes %}max-w-7xl mx-auto main-container{% endblock %}
+
+{% block content %}
+<div class="gradient-border mb-4">
+  <div class="p-6 rounded-xl" style="background-color: var(--color-bg-secondary);">
+    <div class="text-center mb-4">
+      <h2 class="text-3xl font-bold mb-1" style="color: var(--color-text-primary);">Create Line Sheet</h2>
+      <p style="color: var(--color-text-secondary);" class="text-sm">Design and manage your product line sheets effortlessly</p>
+    </div>
+
+    <!-- Unified Form -->
+    <form id="lineSheetForm" action="/upload-excel" method="post" enctype="multipart/form-data">
+      <!-- Two Column Layout -->
+      <div class="grid md:grid-cols-2 gap-4">
+        <!-- Required Section - Left Column -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-icon bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+              </svg>
             </div>
-            {% endfor %}
+            <h3 class="text-lg font-semibold" style="color: var(--color-text-primary);">Required Information</h3>
+          </div>
+          
+          <!-- Line Sheet Title -->
+          <div class="form-group">
+            <label for="title" class="form-label">Line Sheet Title <span class="required">*</span></label>
+            <input type="text" name="title" id="title" placeholder="Enter Line Sheet Title" required 
+                  class="form-control">
+            <p class="form-text">This will be displayed as the heading of your line sheet</p>
+          </div>
+          
+          <!-- Excel File -->
+          <div class="form-group">
+            <label for="excelFile" class="form-label">Excel File <span class="required">*</span></label>
+            <div class="file-input-container indigo-container">
+              <input type="file" name="excel" id="excelFile" accept=".xlsx,.xls" required>
+            </div>
+            <p class="form-text">Upload Excel file with product data (STYLE#, COLOR, DESCRIPTION, SIZES, PRICE)</p>
+          </div>
+          
+          <!-- Album Price List -->
+          <div class="form-group">
+            <label for="albumPriceList" class="form-label">Album Price List (PDF) <span class="required">*</span></label>
+            <div class="file-input-container indigo-container">
+              <input type="file" name="album_price_list" id="albumPriceList" accept=".pdf" required>
+            </div>
+            <p class="form-text">Upload the PDF file containing the album price list</p>
+          </div>
         </div>
-    </div> -->
+        
+        <!-- Optional Section - Right Column -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-icon bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-300">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold" style="color: var(--color-text-primary);">Optional Image Collection</h3>
+          </div>
+          
+          <!-- Collection Name -->
+          <div class="form-group">
+            <label for="collectionName" class="form-label">Collection Name</label>
+            <input type="text" name="collection_name" id="collectionName" placeholder="Enter Collection Name (e.g., FW25)" 
+                  class="form-control">
+            <p class="form-text">Name of the image collection for organizing in Cloudinary</p>
+          </div>
+          
+          <!-- Image Directory -->
+          <div class="form-group">
+            <label for="imageDirectory" class="form-label">Image Directory</label>
+            <div class="file-input-container purple-container">
+              <input type="file" name="images" id="imageDirectory" webkitdirectory directory multiple 
+                    accept="image/*">
+            </div>
+            <p class="form-text">Select a folder containing product images</p>
+          </div>
+          
+        </div>
+      </div>
+      
+      <!-- Submit Button -->
+      <div class="mt-6 flex justify-center">
+        <button type="submit" id="submitBtn" class="btn-primary">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+          </svg>
+          Generate Line Sheet
+        </button>
+      </div>
+      
+      <!-- Progress Indicator -->
+      <div id="uploadProgress" class="hidden mt-4">
+        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-2">
+          <div id="progressBar" class="bg-indigo-600 h-2.5 rounded-full" style="width: 0%"></div>
+        </div>
+        <p id="uploadStatus" class="text-center text-sm" style="color: var(--color-text-secondary);">Preparing upload...</p>
+      </div>
+    </form>
+    
+    <div class="alert-info mt-6">
+      <p class="text-xs" style="color: var(--color-text-secondary);">
+        <strong>Note:</strong> Make sure your Excel file contains the required columns. If you upload images, they will be matched to products based on style numbers.
+      </p>
+    </div>
+  </div>
+</div>
 
-</body>
-</html>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('lineSheetForm');
+    const progressDiv = document.getElementById('uploadProgress');
+    const progressBar = document.getElementById('progressBar');
+    const statusText = document.getElementById('uploadStatus');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Update file input labels
+    const fileInputs = document.querySelectorAll('input[type="file"]');
+    fileInputs.forEach(input => {
+        const container = input.parentElement;
+        
+        // Set initial text
+        if (input.id === 'excelFile') {
+            container.setAttribute('data-text', 'Choose Excel');
+        } else if (input.id === 'albumPriceList') {
+            container.setAttribute('data-text', 'Choose PDF');
+        } else if (input.id === 'imageDirectory') {
+            container.setAttribute('data-text', 'Choose Folder');
+        }
+        
+        // Update text when selection changes
+        input.addEventListener('change', function(e) {
+            if (this.files.length > 0) {
+                if (this.id === 'imageDirectory') {
+                    container.setAttribute('data-text', `${this.files.length} files`);
+                } else {
+                    container.setAttribute('data-text', this.files[0].name);
+                }
+            } else {
+                let defaultText = 'Choose File';
+                if (this.id === 'excelFile') defaultText = 'Choose Excel';
+                else if (this.id === 'albumPriceList') defaultText = 'Choose PDF';
+                else if (this.id === 'imageDirectory') defaultText = 'Choose Folder';
+                
+                container.setAttribute('data-text', defaultText);
+            }
+        });
+    });
+    
+    // Handle form submission
+    form.addEventListener('submit', function(e) {
+        console.log("Form submitted");
+        
+        // Check if there are images selected and collection name provided
+        const imagesInput = document.getElementById('imageDirectory');
+        const collectionName = document.getElementById('collectionName').value.trim();
+        
+        if (imagesInput.files.length > 0 && collectionName) {
+            console.log("Using directory upload");
+            // Change form action to directory upload endpoint
+            form.action = '/upload-directory';
+        } else {
+            // Make sure we're using the excel upload endpoint
+            console.log("Using excel upload");
+            form.action = '/upload-excel';
+        }
+        
+        // Show progress indicators
+        progressDiv.classList.remove('hidden');
+        statusText.textContent = 'Processing submission...';
+        progressBar.style.width = '50%';
+        
+        // Allow form to submit normally
+        return true;
+    });
+});
+</script>
+{% endblock %}

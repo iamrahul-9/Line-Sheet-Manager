@@ -1,254 +1,1045 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Line Sheet Data</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/default-skin/default-skin.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --pswp-bg-opacity: 0; /* Background opacity */
-            --pswp-control-bg-opacity: 0; /* Control background opacity */
-            --pswp-control-color: #1a0b0b; /* Control text color (white) */
-        }
-        body {
-            margin: 0;
-            font-family: 'times new roman', 'poppins', sans-serif; /* Added 'times new roman' font */
-            color: rgb(21, 21, 21); /* Matt black font color */
-        }
-        .content-text {
-            font-size: 0.5em;
-        }
-        .content-result {
-            font-size: 0.9em;
-            word-wrap: break-word;
-        }
-        .image-container img {
-            transition: transform 0.2s;
-        }
-        .image-container img:hover {
-            transform: scale(1.05);
-        }
-        .blurred {
-            filter: blur(10px);
-            background-color: rgba(0, 0, 0, 0.7); /* Black tint */
-        }
-        /* Custom PhotoSwipe theme */
-        .pswp__bg {
-            background-color: rgba(26, 32, 44, var(--pswp-bg-opacity)) !important; /* Transparent background */
-        }
-        .pswp__top-bar,
-        .pswp__caption,
-        .pswp__button--close,
-        .pswp__button--fs,
-        .pswp__button--zoom,
-        .pswp__button--arrow--left,
-        .pswp__button--arrow--right {
-            background-color: rgba(45, 55, 72, var(--pswp-control-bg-opacity)) !important; /* Transparent background for controls */
-            color: var(--pswp-control-color) !important; /* White text color */
-        }
-        .pswp__button--close:before,
-        .pswp__button--fs:before,
-        .pswp__button--zoom:before,
-        .pswp__button--arrow--left:before,
-        .pswp__button--arrow--right:before {
-            color: var(--pswp-control-color) !important; /* White icon color */
-        }
-        .pswp__caption__center {
-            font-size: 1.2em;
-            font-weight: bold;
-            text-align: center;
-            white-space: nowrap;
-            color: var(--pswp-control-color) !important; /* White text color */
-        }
-        .pswp__img {
-            border: 10px solid white; /* 10px border */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Shadow effect */
-        }
-        .pswp__button {
-            margin-right: 10px; /* Add space between buttons */
-        }
+{% extends 'base.html' %}
 
-        @media print {
-    /* Remove grey background */
-    body, #content-wrapper {
-        background: white !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-        box-shadow: none !important;
+{% block title %}{{ title|upper }} - Line Sheet Data{% endblock %}
+
+{% block additional_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+{% endblock %}
+
+{% block container_classes %}max-w-7xl mx-auto p-6 rounded-lg shadow-lg{% endblock %}
+
+{% block additional_styles %}
+<style>
+    :root {
+        --primary-color: #4f46e5;
+        --secondary-color: #6366f1;
+        --accent-color: #8b5cf6;
+        --text-color: #374151;
+        --light-gray: #f8f9fa;
+        --border-color: #e5e7eb;
     }
 
-    /* Remove link styles */
-    a {
-        color: black !important;
-        text-decoration: none !important;
-        pointer-events: none !important; /* Disables clicking */
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Poppins', sans-serif;
+        color: var(--text-color);
+        background-color: var(--light-gray);
     }
 
-    /* Remove image shadows and borders */
+    .product-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(220px, 1fr));
+        gap: 1.5rem;
+        padding: 1rem;
+        margin: 0 auto;
+    }
+
+    .product-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .image-container {
+        position: relative;
+        padding-top: 120% !important;
+        overflow: hidden;
+        background-color: var(--light-gray);
+    }
+
     .image-container img {
-        box-shadow: none !important;
-        border: none !important;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        transition: transform 0.5s ease;
+        loading: lazy;
+        background-color: white;
     }
 
-    /* Hide PhotoSwipe elements */
-    .pswp__bg, .pswp__top-bar, .pswp__button, .pswp__caption {
+    .image-container img.error {
+        object-fit: contain;
+        padding: 1rem;
+    }
+
+    .image-container .fallback-icon {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 3rem;
+        color: var(--secondary-color);
+        opacity: 0.5;
+    }
+
+    .image-container:hover img {
+        transform: scale(1.05); /* Restored original scale effect */
+    }
+
+    .product-info {
+        padding: 0.5rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .style-number {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #000000;
+        margin-bottom: 0.5rem;
+    }
+
+    .product-details {
+        display: grid;
+        gap: 0.75rem;
+        font-size: 0.9rem;
+        margin-top: 1rem;
+    }
+
+    .detail-row {
+        display: grid;
+        grid-template-columns: 100px 1fr;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    /* Specific override for sizes row */
+    .product-details .detail-row:has(.fa-ruler) {
+        gap: 0;
+    }
+
+    .detail-label {
+        font-weight: 500;
+        color: #000000;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .detail-label i {
+        font-size: 1rem;
+        width: 16px;
+        text-align: center;
+        color: #4f46e5;
+    }
+
+    .detail-value {
+        color: var(--text-color);
+    }
+
+    .price {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        margin-top: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .price i {
+        font-size: 1.1rem;
+        color: var(--accent-color);
+    }
+
+    .icon {
+        width: 16px;
+        height: 16px;
+        display: inline-block;
+    }
+
+    /* PhotoSwipe Customization - White minimal glass design */
+    .pswp {
+        z-index: 9999;
+    }
+
+    .pswp__bg {
+        background-color: rgba(222, 215, 255, 0.506);
+    }
+
+    /* Consistent UI elements with glass effect */
+    .pswp__top-bar {
+        background: rgba(255, 255, 255, 0.5) !important; /* white with 50% opacity */
+        width: 70%;
+        max-width: 800px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        left: 50%;
+        transform: translateX(-50%);
+        top: 20px;
+        position: absolute;
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+
+    .pswp__counter {
+        color: #000;
+        font-weight: 600;
+        font-size: 16px;
+        position: absolute;
+        left: 20px;
+    }
+
+    /* UI buttons container */
+    .pswp__ui-buttons {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .pswp__button {
+        width: 40px;
+        height: 40px;
+        position: relative;
+        background: none !important;
+        cursor: pointer;
+        overflow: visible;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #000;
+        opacity: 0.75;
+        transition: all 0.2s;
+        margin: 0 5px;
+    }
+
+    .pswp__button:hover {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    /* Minimal icons using Font Awesome */
+    .pswp__button--close::before {
+        font-family: 'Font Awesome 6 Free';
+        content: '\f00d';
+        font-weight: 900;
+        font-size: 16px;
+        color: #000;
+    }
+
+    .pswp__button--fs::before {
+        font-family: 'Font Awesome 6 Free';
+        content: '\f065';
+        font-weight: 900;
+        font-size: 16px;
+        color: #000;
+    }
+
+    .pswp__button--zoom::before {
+        font-family: 'Font Awesome 6 Free';
+        content: '\f002';
+        font-weight: 900;
+        font-size: 16px;
+        color: #000;
+    }
+
+    /* Custom download button */
+    .pswp__button--download::before {
+        font-family: 'Font Awesome 6 Free';
+        content: '\f019';
+        font-weight: 900;
+        font-size: 16px;
+        color: #000;
+    }
+
+    /* Navigation arrows - fixed to avoid duplication */
+    .pswp__button--arrow--left,
+    .pswp__button--arrow--right {
+        background: rgba(255, 255, 255, 0.5) !important; /* white with 50% opacity */
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        top: 50%;
+        margin-top: -20px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        position: absolute;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+    
+    .pswp__button--arrow--left {
+        left: 20px;
+    }
+    
+    .pswp__button--arrow--right {
+        right: 20px;
+    }
+    
+    .pswp__button--arrow--left:hover,
+    .pswp__button--arrow--right:hover {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+
+    /* Override PhotoSwipe's default arrow styling */
+    .pswp__button--arrow--left:before,
+    .pswp__button--arrow--right:before {
+        background: none !important;
+        width: auto !important;
+        height: auto !important;
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        font-size: 16px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #000;
+    }
+
+    .pswp__button--arrow--left:before {
+        content: '\f104' !important;
+    }
+
+    .pswp__button--arrow--right:before {
+        content: '\f105' !important;
+    }
+
+    /* Consistent caption bar with glass effect */
+    .pswp__caption {
+        background: rgba(255, 255, 255, 0.5) !important; /* white with 50% opacity */
+        height: 50px;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: 20px;
+        width: 70%;
+        max-width: 800px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+
+    .pswp__caption__center {
+        text-align: center;
+        max-width: 80%;
+        color: #000;
+        font-weight: 600;
+        padding: 0;
+        font-size: 16px;
+        background: transparent !important;
+        box-shadow: none;
+    }
+
+    /* Position the image to prevent overlap with top bar */
+    .pswp__img {
+        max-height: calc(100vh - 180px);
+        object-fit: contain;
+        margin-top: 45px; /* Add margin to prevent overlap with top bar */
+    }
+
+    /* Hide default button backgrounds */
+    .pswp__button--arrow--left:after,
+    .pswp__button--arrow--right:after {
         display: none !important;
     }
-}
 
-        /* Styles for generated PDF */
-        .pdf-view .image-container img {
+    /* Print Styles */
+    @media print {
+        .product-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .product-card {
+            break-inside: avoid;
+            page-break-inside: avoid;
             box-shadow: none !important;
-            border: none !important;
-            transform: none !important;
         }
-        .pdf-view a {
-            pointer-events: none;
-            text-decoration: none;
-            color: black;
-        }
-        .pdf-view .pswp__bg,
-        .pdf-view .pswp__top-bar,
-        .pdf-view .pswp__button,
-        .pdf-view .pswp__caption {
-            display: none !important;
-        }
-    </style>
-</head>
-<body class="bg-gray-100 p-2 {{ 'pdf-view' if pdf_view else '' }}">
 
-    <div id="content-wrapper" class="max-w-full mx-auto bg-white p-4 rounded-lg shadow-lg">
-        <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
-            <div class="flex-1 text-center">
-                <h1 class="text-3xl font-bold uppercase italic">{{ title }}</h1> <!-- Increased font size -->
+        .product-card:hover {
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .image-container img {
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+        }
+
+        .album-price {
+            display: none;
+        }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1200px) {
+        .product-grid {
+            grid-template-columns: repeat(3, minmax(220px, 1fr));
+        }
+    }
+
+    @media (max-width: 900px) {
+        .product-grid {
+            grid-template-columns: repeat(2, minmax(220px, 1fr));
+        }
+    }
+
+    @media (max-width: 600px) {
+        .product-grid {
+            grid-template-columns: repeat(1, minmax(220px, 1fr));
+        }
+    }
+
+    /* PDF View Styles */
+    .pdf-view .product-card {
+        box-shadow: none !important;
+        border: 1px solid var(--border-color);
+    }
+
+    .pdf-view .product-card:hover {
+        transform: none !important;
+    }
+
+    /* Album Price Button */
+    .album-price {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-image: linear-gradient(to right, #6366f1, #8b5cf6);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 1100;
+        cursor: pointer;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .album-price:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Fix scroll-wrap */
+    .pswp__scroll-wrap {
+        overflow: visible !important;
+    }
+
+    /* Remove padding that was pushing the image down */
+    .pswp__container {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    /* Add header title centering */
+    .header-title {
+        text-align: center;
+        margin: 0 auto;
+        font-size: 2rem;
+        font-weight: 600;
+        color: #000000;
+        width: 100%;
+        display: block;
+    }
+
+    .gallery-note {
+        text-align: center;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        color: var(--secondary-color);
+    }
+
+    .gallery-note p {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .detail-row.size-row {
+        gap: 0;
+    }
+
+    .size-details {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .size-details .detail-row {
+        display: grid;
+        grid-template-columns: 100px 1fr;
+        gap: 0;
+        align-items: start;
+    }
+
+    .size-details .detail-label {
+        font-weight: 500;
+        color: #000000;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.35rem;
+    }
+
+    .size-details .detail-label i {
+        font-size: 1rem;
+        width: 16px;
+        text-align: left;
+        color: #4f46e5;
+    }
+
+    .size-details .sizes-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.4rem;
+        flex-wrap: nowrap;
+        width: 100%;
+    }
+
+    .size-details .size-ratio {
+        display: inline-flex;
+        align-items: flex-start;
+        gap: 0.12rem;
+        white-space: nowrap;
+    }
+
+    .size-details .size-ratio .size {
+        font-weight: 600;
+        color: #000000;
+    }
+
+    .size-details .size-ratio .quantity {
+        color: #000000;
+    }
+
+    .size-details .size-total {
+        font-weight: 600;
+        color: #000000;
+        font-size: 0.9rem;
+        margin-top: 0.25rem;
+        text-align: left;
+    }
+
+    .detail-row.sizes-detail {
+        gap: 0 !important;
+    }
+
+    /* Responsive styles for PhotoSwipe */
+    @media (max-width: 768px) {
+        .pswp__top-bar {
+            max-width: 300px !important;
+            height: 50px !important;
+        }
+        
+        .pswp__button,
+        .download-button {
+            width: 32px !important;
+            height: 50px !important;
+        }
+        
+        .pswp__button--arrow--left,
+        .pswp__button--arrow--right {
+            width: 40px !important;
+            height: 40px !important;
+        }
+        
+        .pswp__img {
+            max-width: 95% !important;
+        }
+
+        .pswp__caption__center {
+            font-size: 14px !important;
+            padding: 8px 16px !important;
+        }
+    }
+
+    /* Ensure glass effect works on all browsers */
+    @supports (backdrop-filter: blur(10px)) {
+        .pswp__top-bar,
+        .pswp__caption,
+        .pswp__button--arrow--left,
+        .pswp__button--arrow--right {
+            backdrop-filter: blur(10px);
+        }
+    }
+    
+    @supports (-webkit-backdrop-filter: blur(10px)) {
+        .pswp__top-bar,
+        .pswp__caption,
+        .pswp__button--arrow--left,
+        .pswp__button--arrow--right {
+            -webkit-backdrop-filter: blur(10px);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block header_title %}<h1 class="header-title">{{ title|upper }}</h1>{% endblock %}
+
+{% block content %}
+<div class="gallery-note">
+    <p>💡 Click on any image to open the gallery view</p>
+</div>
+
+<div class="product-grid">
+    {% for product in products %}
+    <div class="product-card">
+        <a href="{{ product[6] }}" class="image-container" data-size="1024x1024" data-caption="Style #: {{ product[1] }} | Price: ${{ product[5] }}">
+            <img src="{{ product[6] }}" 
+                 alt="Style {{ product[1] }}"
+                 loading="lazy"
+                 data-fallback="{{ url_for('static', filename='images/placeholder.webp') }}">
+        </a>
+        <div class="product-info">
+            <div class="style-number">Style #{{ product[1] }}</div>
+            <div class="product-details">
+                <div class="detail-row">
+                    <span class="detail-label">
+                        <i class="fas fa-palette"></i>
+                        Color:
+                    </span>
+                    <span class="detail-value">{{ product[2] }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">
+                        <i class="fas fa-tag"></i>
+                        Description:
+                    </span>
+                    <span class="detail-value">{{ product[3] }}</span>
+                </div>
+                <div class="detail-row sizes-detail">
+                    <span class="detail-label">
+                        <i class="fas fa-ruler"></i>
+                        Sizes:
+                    </span>
+                    <div class="detail-value size-details" data-size="{{ product[4] }}">{{ product[4] }}</div>
+                </div>
+                <div class="price">
+                    <i class="fas fa-dollar-sign"></i>
+                    {{ product[5] }}
+                </div>
             </div>
-            <div class="flex-shrink-0 mt-2 sm:mt-0">
-                <button onclick="openFile()" type="button" class="text-xl text-white bg-[#7D563E] hover:bg-[#7D563E]/90 focus:ring-4 focus:outline-none focus:ring-[#7D563E]/50 rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:focus:ring-[#7D563E]/50 dark:hover:bg-[#7D563E]/30 me-2 mb-2">
-                    ALBUM PRICE LIST
-                    </button>
-            </div>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mt-2">
-            {% for product in products %}
-            <div class="text-xl border p-2 rounded-lg bg-white shadow-lg text-left image-container">
-                <a href="{{ url_for('static', filename=product[6]) }}" data-caption="Style #: {{ product[1] }} | Price: ${{ "%.2f"|format(product[5]|float) }}">
-                    <img src="{{ url_for('static', filename=product[6]) }}" class="w-full h-80 object-contain rounded-lg">
-                </a>
-                <div class="border-t mt-2 pt-2">
-                    <strong>Style #:</strong> <span class="ml-2">{{ product[1] }}</span>
-                </div>
-                <div class="border-t mt-2 pt-2">
-                    <strong>Colors:</strong> <span class="ml-2">{{ product[2] }}</span>
-                </div>
-                <div class="border-t mt-2 pt-2">
-                    <strong>Content:</strong> <span class="ml-2 content-result">{{ product[3] }}</span>
-                </div>
-                <div class="border-t mt-2 pt-2">
-                    <strong>Sizes:</strong> <span class="ml-2">{{ product[4] }}</span>
-                </div>
-                <div class="border-t mt-2 pt-2">
-                    <strong>Price:</strong> <span class="ml-2">${{ "%.2f"|format(product[5]|float) }}</span>
-                </div>
-            </div>
-            {% endfor %}
         </div>
     </div>
+    {% endfor %}
+</div>
 
-    <!-- PhotoSwipe Core -->
-    <div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="pswp__bg"></div>
-        <div class="pswp__scroll-wrap">
-            <div class="pswp__container">
-                <div class="pswp__item"></div>
-                <div class="pswp__item"></div>
-                <div class="pswp__item"></div>
-            </div>
-            <div class="pswp__ui pswp__ui--hidden">
-                <div class="pswp__top-bar">
-                    <div class="pswp__counter"></div>
+<a href="{{ album_price_list_url if album_price_list_url else url_for('static', filename='FW25 ALBUM PRICE LIST.pdf') }}" class="album-price" target="_blank">Album Price List</a>
+
+<!-- PhotoSwipe Template -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="pswp__bg"></div>
+    <div class="pswp__scroll-wrap">
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+        <div class="pswp__ui pswp__ui--hidden">
+            <div class="pswp__top-bar">
+                <div class="pswp__counter"></div>
+                <div class="pswp__ui-buttons">
                     <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
                     <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
                     <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
-                    <div class="pswp__preloader">
-                        <div class="pswp__preloader__icn">
-                            <div class="pswp__preloader__cut">
-                                <div class="pswp__preloader__donut"></div>
-                            </div>
+                    <button class="pswp__button pswp__button--download" title="Download image"></button>
+                </div>
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
                         </div>
                     </div>
                 </div>
-                <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
-                    <div class="pswp__share-tooltip"></div>
-                </div>
-                <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)"></button>
-                <button class="pswp__button--arrow--right" title="Next (arrow right)"></button>
-                <div class="pswp__caption">
-                    <div class="pswp__caption__center"></div>
-                </div>
-                <button class="pswp__button pswp__button--download" title="Download">
-                    <a href="#" download>
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
-                            <path fill-rule="evenodd" d="M12 2a1 1 0 011 1v12.586l3.293-3.293a1 1 0 011.414 1.414l-5 5a1 1 0 01-1.414 0l-5-5a1 1 0 011.414-1.414L11 15.586V3a1 1 0 011-1z" clip-rule="evenodd" />
-                            <path fill-rule="evenodd" d="M4 18a1 1 0 011-1h14a1 1 0 110 2H5a1 1 0 01-1-1z" clip-rule="evenodd" />
-                        </svg>
-                    </a>
-                </button>
+            </div>
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)"></button>
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)"></button>
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
             </div>
         </div>
     </div>
+</div>
+{% endblock %}
 
-    <script>
-        function openFile() {
-            window.open("{{ url_for('static', filename='FW25 ALBUM PRICE LIST.pdf') }}", '_blank');
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Error handling for images
+        document.querySelectorAll('img[data-fallback]').forEach(img => {
+            img.onerror = function() {
+                this.src = this.dataset.fallback;
+                this.classList.add('error');
+            };
+        });
+
+        // Parse size ratios
+        function parseSizeRatios(sizeString) {
+            if (!sizeString) return { isRatio: false, sizeString: "" };
+            
+            // Check if the string contains commas (size ratio format)
+            if (sizeString.includes(',')) {
+                const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
+                // Split by comma and handle empty values
+                const quantities = sizeString.split(',').map(num => {
+                    const trimmed = num.trim();
+                    return trimmed === '' ? 0 : parseInt(trimmed);
+                });
+                let total = 0;
+                
+                const ratios = sizes.map((size, index) => {
+                    const quantity = quantities[index] || 0;
+                    total += quantity;
+                    return {
+                        size,
+                        quantity
+                    };
+                });
+                
+                return {
+                    isRatio: true,
+                    ratios,
+                    total
+                };
+            } else {
+                // Regular size string format
+                return {
+                    isRatio: false,
+                    sizeString
+                };
+            }
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            var pswpElement = document.querySelectorAll('.pswp')[0];
-            var items = [];
-            document.querySelectorAll('.image-container a').forEach(function(el) {
-                var img = new Image();
-                img.src = el.getAttribute('href');
+        // Update size displays
+        document.querySelectorAll('.detail-value[data-size]').forEach(element => {
+            const sizeString = element.getAttribute('data-size');
+            const result = parseSizeRatios(sizeString);
+            
+            if (result.isRatio) {
+                const ratiosHtml = result.ratios.map(ratio => `
+                    <span class="size-ratio">
+                        <span class="size">${ratio.size}:</span>
+                        <span class="quantity">${ratio.quantity}</span>
+                    </span>
+                `).join('');
 
-                img.onload = function() {
-                    items.push({
-                        src: img.src,
-                        w: img.naturalWidth,  // Get actual width
-                        h: img.naturalHeight,  // Get actual height
-                        title: el.getAttribute('data-caption')  // Get caption
-                    });
-                };
-            });
-
-            document.querySelectorAll('.image-container a').forEach(function(el, index) {
-                el.addEventListener('click', function(event) {
-                    event.preventDefault();
-                    var options = {
-                        index: index,
-                        bgOpacity: 0.7,
-                        showHideOpacity: true
-                    };
-                    var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, options);
-                    gallery.listen('beforeChange', function() {
-                        document.getElementById('content-wrapper').classList.add('blurred');
-                    });
-                    gallery.listen('close', function() {
-                        document.getElementById('content-wrapper').classList.remove('blurred');
-                    });
-                    gallery.listen('afterChange', function() {
-                        var downloadButton = document.querySelector('.pswp__button--download a');
-                        downloadButton.href = items[gallery.getCurrentIndex()].src;
-                    });
-                    gallery.init();
-                });
-            });
+                element.innerHTML = `
+                    <div class="size-details">
+                        <div class="sizes-row">
+                            ${ratiosHtml}
+                        </div>
+                        <div class="size-total">Total: ${result.total}</div>
+                    </div>
+                `;
+            } else {
+                // Display the regular size string as is
+                element.textContent = result.sizeString;
+            }
         });
-    </script>
 
-</body>
-</html>
+        // PhotoSwipe initialization using standard approach
+        var initPhotoSwipeFromDOM = function(gallerySelector) {
+            // Parse slide data from DOM elements
+            var parseThumbnailElements = function(el) {
+                var thumbElements = el.querySelectorAll('.image-container'),
+                    numNodes = thumbElements.length,
+                    items = [],
+                    figureEl,
+                    linkEl,
+                    size,
+                    item;
+
+                for(var i = 0; i < numNodes; i++) {
+                    linkEl = thumbElements[i]; // <a> element
+                    
+                    // Include only <a> elements
+                    if(linkEl.tagName !== 'A') {
+                        continue;
+                    }
+
+                    // Get size from data-size attribute
+                    if(linkEl.getAttribute('data-size')) {
+                        size = linkEl.getAttribute('data-size').split('x');
+                    } else {
+                        // Default size if not specified
+                        size = ['1024', '1024'];
+                    }
+
+                    // Create slide object
+                    item = {
+                        src: linkEl.getAttribute('href'),
+                        w: parseInt(size[0], 10),
+                        h: parseInt(size[1], 10),
+                        title: linkEl.getAttribute('data-caption')
+                    };
+
+                    if(linkEl.querySelector('img')) {
+                        // Use image as thumbnail
+                        item.msrc = linkEl.querySelector('img').getAttribute('src');
+                    }
+                    
+                    item.el = linkEl; // Save link to element for reference
+                    items.push(item);
+                }
+
+                return items;
+            };
+
+            // Find nearest parent element
+            var closest = function closest(el, fn) {
+                return el && (fn(el) ? el : closest(el.parentNode, fn));
+            };
+
+            // Triggers when user clicks on thumbnail
+            var onThumbnailsClick = function(e) {
+                e = e || window.event;
+                e.preventDefault ? e.preventDefault() : e.returnValue = false;
+
+                var eTarget = e.target || e.srcElement;
+
+                // Find closest link element
+                var clickedListItem = closest(eTarget, function(el) {
+                    return (el.tagName === 'A');
+                });
+
+                if(!clickedListItem) {
+                    return;
+                }
+
+                // Find index of clicked item
+                var clickedGallery = document.querySelector(gallerySelector),
+                    childNodes = clickedGallery.querySelectorAll('.image-container'),
+                    numChildNodes = childNodes.length,
+                    nodeIndex = 0,
+                    index;
+
+                for (var i = 0; i < numChildNodes; i++) {
+                    if(childNodes[i] === clickedListItem) {
+                        index = nodeIndex;
+                        break;
+                    }
+                    nodeIndex++;
+                }
+
+                if(index >= 0) {
+                    // Open PhotoSwipe if valid index found
+                    openPhotoSwipe(index, clickedGallery);
+                }
+                return false;
+            };
+
+            // Parse picture index and gallery index from URL (#&pid=1&gid=2)
+            var photoswipeParseHash = function() {
+                var hash = window.location.hash.substring(1),
+                params = {};
+
+                if(hash.length < 5) {
+                    return params;
+                }
+
+                var vars = hash.split('&');
+                for (var i = 0; i < vars.length; i++) {
+                    if(!vars[i]) {
+                        continue;
+                    }
+                    var pair = vars[i].split('=');  
+                    if(pair.length < 2) {
+                        continue;
+                    }           
+                    params[pair[0]] = pair[1];
+                }
+
+                if(params.gid) {
+                    params.gid = parseInt(params.gid, 10);
+                }
+
+                return params;
+            };
+
+            // Open PhotoSwipe
+            var openPhotoSwipe = function(index, galleryElement, disableAnimation, fromURL) {
+                var pswpElement = document.querySelectorAll('.pswp')[0],
+                    gallery,
+                    options,
+                    items;
+
+                items = parseThumbnailElements(galleryElement);
+
+                // Define options
+                options = {
+                    // Core options
+                    galleryUID: galleryElement.getAttribute('data-pswp-uid'),
+                    getThumbBoundsFn: function(index) {
+                        // Get element and position of thumbnail
+                        var thumbnail = items[index].el.querySelector('img'),
+                            pageYScroll = window.pageYOffset || document.documentElement.scrollTop,
+                            rect = thumbnail.getBoundingClientRect(); 
+
+                        return {x:rect.left, y:rect.top + pageYScroll, w:rect.width};
+                    },
+                    
+                    // UI options
+                    closeOnScroll: false,
+                    history: false,
+                    focus: true,
+                    modal: true,
+                    
+                    // Zoom options
+                    maxSpreadZoom: 4,                    
+                    getDoubleTapZoom: function(isMouseClick, item) {
+                        return isMouseClick ? 2.5 : 1.8;
+                    },
+                    
+                    // Feature flags
+                    showHideOpacity: true,
+                    bgOpacity: 0.8,
+                    spacing: 0.12,
+                    allowPanToNext: true,
+                    pinchToClose: false,
+                    
+                    // Additional UI
+                    shareEl: false,
+                    fullscreenEl: true,
+                    zoomEl: true,
+                    arrowEl: true,
+                    captionEl: true,
+                    
+                    // Add mouse handling for precise zooming
+                    mouseUsed: true,
+                    clickToCloseNonZoomable: false
+                };
+
+                // PhotoSwipe opened from URL
+                if(fromURL) {
+                    if(options.galleryPIDs) {
+                        for(var j = 0; j < items.length; j++) {
+                            if(items[j].pid == index) {
+                                options.index = j;
+                                break;
+                            }
+                        }
+                    } else {
+                        options.index = parseInt(index, 10) - 1;
+                    }
+                } else {
+                    options.index = parseInt(index, 10);
+                }
+
+                // Exit if index not found
+                if(isNaN(options.index) ) {
+                    return;
+                }
+
+                if(disableAnimation) {
+                    options.showAnimationDuration = 0;
+                }
+
+                // Initialize and load proper dimensions
+                gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, options);
+                
+                // Preload images to ensure proper dimensions
+                gallery.listen('gettingData', function(index, item) {
+                    if(!item.w || !item.h || item.w < 700) {
+                        var img = new Image();
+                        img.onload = function() {
+                            item.w = Math.max(this.width, 1024);
+                            item.h = Math.max(this.height, 1024);
+                            gallery.updateSize(true);
+                        };
+                        img.src = item.src;
+                    }
+                });
+                
+                // Add precise zoom handling
+                gallery.listen('initialZoomInEnd', function() {
+                    document.querySelector('.pswp').addEventListener('click', function(e) {
+                        if(e.target.classList.contains('pswp__img')) {
+                            if(gallery.getZoomLevel() > 1) {
+                                gallery.zoomTo(1, {x: gallery.viewportSize.x/2, y: gallery.viewportSize.y/2}, 300);
+                            } else {
+                                var rect = e.target.getBoundingClientRect();
+                                var x = e.clientX - rect.left;
+                                var y = e.clientY - rect.top;
+                                gallery.zoomTo(2.5, {x: x, y: y}, 300);
+                            }
+                        }
+                    });
+                });
+                
+                // Add download button functionality
+                gallery.listen('afterChange', function() {
+                    const downloadButton = document.querySelector('.pswp__button--download');
+                    if (downloadButton && gallery.currItem) {
+                        if (!downloadButton.hasAttribute('download-initialized')) {
+                            downloadButton.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                
+                                // Create a temporary link and trigger download
+                                const link = document.createElement('a');
+                                link.href = gallery.currItem.src;
+                                link.download = 'image-' + (gallery.getCurrentIndex() + 1) + '.jpg';
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                            });
+                            downloadButton.setAttribute('download-initialized', 'true');
+                        }
+                    }
+                });
+                
+                gallery.init();
+            };
+
+            // Loop through all gallery elements and bind events
+            var galleryElements = document.querySelectorAll(gallerySelector);
+
+            for(var i = 0, l = galleryElements.length; i < l; i++) {
+                galleryElements[i].setAttribute('data-pswp-uid', i+1);
+                galleryElements[i].onclick = onThumbnailsClick;
+            }
+
+            // Check if URL has hash for photoswipe
+            var hashData = photoswipeParseHash();
+            if(hashData.pid && hashData.gid) {
+                openPhotoSwipe(hashData.pid, galleryElements[hashData.gid-1], true, true);
+            }
+        };
+
+        // Initialize PhotoSwipe on the product grid
+        initPhotoSwipeFromDOM('.product-grid');
+        
+        // Define productsData if needed
+        var productsData = [];
+        try {
+            productsData = JSON.parse({{ products|tojson|safe }});
+        } catch (e) {
+            console.error("Error parsing products data:", e);
+        }
+    });
+</script>    
+{% endblock %}
+
