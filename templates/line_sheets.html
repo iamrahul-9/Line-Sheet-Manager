@@ -1,261 +1,590 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ title }} - Line Sheet Data{% endblock %}
+{% block title %}{{ title|upper }} - Line Sheet Data{% endblock %}
 
 {% block additional_head %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/default-skin/default-skin.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 {% endblock %}
+
+{% block container_classes %}max-w-7xl mx-auto p-6 rounded-lg shadow-lg{% endblock %}
 
 {% block additional_styles %}
 <style>
     :root {
-        --pswp-bg-opacity: 0.7; /* Dark background to make controls visible */
-        --pswp-control-bg-opacity: 0; /* Transparent controls background */
-        --pswp-control-color: #ffffff; /* White control color for visibility */
+        --primary-color: #4f46e5;
+        --secondary-color: #6366f1;
+        --accent-color: #8b5cf6;
+        --text-color: #374151;
+        --light-gray: #f8f9fa;
+        --border-color: #e5e7eb;
+        --color-bg-primary: #fff;
+        --color-bg-secondary: #ffffff;
+        --color-text-primary: #000;
+        --color-text-secondary: #374151;
+        --shadow-color: rgba(0, 0, 0, 0.1);
     }
+
+    .dark {
+        --primary-color: #6366f1;
+        --secondary-color: #818cf8;
+        --accent-color: #a78bfa;
+        --text-color: #f3f4f6;
+        --light-gray: #1e1e1e;
+        --border-color: #374151;
+        --color-bg-primary: #121212;
+        --color-bg-secondary: #1e1e1e;
+        --color-text-primary: #f3f4f6;
+        --color-text-secondary: #9ca3af;
+        --shadow-color: rgba(0, 0, 0, 0.5);
+    }
+
     body {
         margin: 0;
-        font-family: 'times new roman', 'poppins', sans-serif;
-        color: rgb(21, 21, 21);
+        padding: 0;
+        font-family: 'Poppins', sans-serif;
+        color: var(--text-color);
+        background-color: var(--color-bg-primary);
     }
-    .content-text {
-        font-size: 0.5em;
+
+    .product-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(220px, 1fr));
+        gap: 1.5rem;
+        padding: 1rem;
+        margin: 0 auto;
     }
-    .content-result {
-        font-size: 0.9em;
-        word-wrap: break-word;
+
+    .product-card {
+        background: var(--color-bg-secondary);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: 0 2px 10px var(--shadow-color);
+        display: flex;
+        flex-direction: column;
     }
+
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px var(--shadow-color);
+    }
+
+    .image-container {
+        position: relative;
+        padding-top: 120% !important;
+        overflow: hidden;
+        background-color: var(--color-bg-secondary);  /* Match with card background */
+        border-bottom: none;  /* Remove any potential border */
+    }
+
     .image-container img {
-        transition: transform 0.2s;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: inherit;
+        transition: transform 0.5s ease;
+        background-color: var(--color-bg-secondary);  /* Match with card background */
     }
-    .image-container img:hover {
+
+    .image-container img.error {
+        object-fit: contain;
+        padding: 1rem;
+    }
+
+    .image-container .fallback-icon {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 3rem;
+        color: var(--secondary-color);
+        opacity: 0.5;
+    }
+
+    .image-container:hover img {
         transform: scale(1.05);
     }
-    .blurred {
-        filter: blur(10px);
-        background-color: rgba(0, 0, 0, 0.7);
-    }
-    
-    /* PhotoSwipe theme with subtle ombre */
-    .pswp__bg {
-        background: linear-gradient(to bottom, rgb(255, 255, 255), rgba(157, 157, 157, 0.6)) !important;
-    }
-    
-    /* Top bar with subtle gradient */
-    .pswp__top-bar {
-        background: rgba(255, 255, 255, 0) !important;
-        height: 44px !important;
-        padding: 0 10px !important;
-    }
-    
-    /* Hide tooltips */
-    .pswp__button[title]:hover::after {
-        display: none !important;
-    }
-    
-    /* Make buttons visible but subtle */
-    .pswp__button {
-        opacity: 1 !important;
-        margin: 0 8px !important;
-        color: rgb(69, 69, 69) !important;
-        background-color: white !important;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3) !important;
-        border-radius: 50% !important;
-    }
-    
-    /* Arrow buttons need special treatment */
-    .pswp__button--arrow--left:before,
-    .pswp__button--arrow--right:before {
-        background-color: white !important;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3) !important;
-    }
-    
-    /* Fix icon colors */
-    .pswp__button--close,
-    .pswp__button--fs,
-    .pswp__button--zoom {
-        filter: none !important;
-        opacity: 0.8 !important;
-    }
-    
-    /* Remove the SVG filter that was making icons white */
-    .pswp__button svg {
-        filter: none !important;
-    }
-    
-    /* Position arrows away from edges but still visible */
-    .pswp__button--arrow--left {
-        left: 20px !important;
-    }
-    
-    .pswp__button--arrow--right {
-        right: 20px !important;
-    }
-    
-    /* Custom download button */
-    .pswp__custom-download {
-        position: absolute !important;
-        right: 200px !important; /* Positioned further left */
-        top: 5px !important;
-        z-index: 100 !important;
-    }
-    
-    /* Hide default download button */
-    .pswp__button--download {
-        display: none !important;
-    }
-    
-    /* Simple caption */
-    .pswp__caption {
-        background: rgba(255, 255, 255, 0) !important;
-    }
-    
-    .pswp__caption__center {
-        text-align: center !important;
-        max-width: 80% !important;
-        font-size: 20px !important;
-        color: rgb(69, 69, 69) !important;
-    }
-    
-    .pswp__img {
-        border: 10px solid white;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
 
-    @media print {
-        /* Remove grey background */
-        body, #content-wrapper {
-            background: white !important;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-            box-shadow: none !important;
-        }
-
-        /* Remove link styles */
-        a {
-            color: black !important;
-            text-decoration: none !important;
-            pointer-events: none !important;
-        }
-
-        /* Remove image shadows and borders */
-        .image-container img {
-            box-shadow: none !important;
-            border: none !important;
-        }
-
-        /* Hide PhotoSwipe elements */
-        .pswp__bg, .pswp__top-bar, .pswp__button, .pswp__caption {
-            display: none !important;
-        }
-    }
-
-    /* Styles for generated PDF */
-    .pdf-view .image-container img {
-        box-shadow: none !important;
-        border: none !important;
-        transform: none !important;
-    }
-    .pdf-view a {
-        pointer-events: none;
-        text-decoration: none;
-        color: black;
-    }
-    .pdf-view .pswp__bg,
-    .pdf-view .pswp__top-bar,
-    .pdf-view .pswp__button,
-    .pdf-view .pswp__caption {
-        display: none !important;
-    }
-
-    /* Hide default PhotoSwipe buttons */
-    .pswp__button--close, 
-    .pswp__button--fs, 
-    .pswp__button--zoom,
-    .pswp__button--arrow--left,
-    .pswp__button--arrow--right {
-        opacity: 0 !important;
-        pointer-events: none !important;
-    }
-
-    /* Custom buttons container styles */
-    .pswp__custom-buttons {
-        position: absolute;
-        top: 5px;
-        right: 5px;
+    .product-info {
+        padding: 1rem;
+        flex-grow: 1;
         display: flex;
-        z-index: 100;
-        gap: 8px;
+        flex-direction: column;
+        background-color: var(--color-bg-secondary);
+    }
+
+    .dark .product-info {
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .style-number {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--color-text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .product-details {
+        display: grid;
+        gap: 0.75rem;
+        font-size: 0.9rem;
+        margin-top: 1rem;
+    }
+
+    .detail-row {
+        display: grid;
+        grid-template-columns: 100px 1fr;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .detail-label {
+        font-weight: 500;
+        color: var(--color-text-primary);
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .detail-label i {
+        font-size: 1rem;
+        width: 16px;
+        text-align: center;
+        color: var(--primary-color);
+    }
+
+    .detail-value {
+        color: var(--color-text-secondary);
+    }
+
+    .price {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--color-text-primary);
+        margin-top: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .price i {
+        font-size: 1.1rem;
+        color: var(--color-text-primary);
+    }
+
+    .header-title {
+        color: var(--color-text-primary);
+        text-align: center;
+        margin: 0 auto;
+        font-size: 2rem;
+        font-weight: 600;
+    }
+
+    .gallery-note {
+        color: var(--color-text-secondary);
+        text-align: center;
+        margin-bottom: 2rem;
+        font-size: 0.9rem;
+        background-color: var(--color-bg-secondary);
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px var(--shadow-color);
+    }
+
+    .size-details {
+        color: var(--color-text-primary);
+        margin-top: 4px;
     }
     
-    /* Arrow button containers */
-    .pswp__custom-prev {
+    .sizes-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+        text-align: center;
+        margin-bottom: 6px;
+    }
+    
+    .size-label {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--color-text-primary);
+    }
+    
+    .size-value {
+        font-size: 0.95rem;
+        color: var(--color-text-secondary);
+    }
+    
+    .size-total {
+        margin-top: 6px;
+        text-align: right;
+        font-weight: 500;
+        color: var(--color-text-primary);
+        font-size: 0.9rem;
+    }
+
+    .album-price {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-image: linear-gradient(to right, var(--primary-color), var(--accent-color));
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        box-shadow: 0 4px 12px var(--shadow-color);
+        z-index: 1100;
+        cursor: pointer;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .album-price:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px var(--shadow-color);
+    }
+
+    /* PhotoSwipe Customization - White minimal glass design */
+    .pswp {
+        z-index: 9999;
+    }
+
+    .pswp__bg {
+        background-color: rgba(222, 215, 255, 0.506);
+    }
+
+    /* Consistent UI elements with glass effect */
+    .pswp__top-bar {
+        background: rgba(255, 255, 255, 0.5) !important;
+        width: 70%;
+        max-width: 800px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        left: 50%;
+        transform: translateX(-50%);
+        top: 20px;
+        position: absolute;
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+
+    .pswp__counter {
+        color: #000;
+        font-weight: 600;
+        font-size: 16px;
         position: absolute;
         left: 20px;
+    }
+
+    /* UI buttons container */
+    .pswp__ui-buttons {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .pswp__button {
+        width: 40px;
+        height: 40px;
+        position: relative;
+        background: none !important;
+        cursor: pointer;
+        overflow: visible;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #000;
+        opacity: 0.75;
+        transition: all 0.2s;
+        margin: 0 5px;
+    }
+
+    .pswp__button:hover {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    /* Minimal icons using Font Awesome */
+    .pswp__button--close::before {
+        font-family: 'Font Awesome 6 Free';
+        content: '\f00d';
+        font-weight: 900;
+        font-size: 16px;
+        color: #000;
+    }
+
+    .pswp__button--fs::before {
+        font-family: 'Font Awesome 6 Free';
+        content: '\f065';
+        font-weight: 900;
+        font-size: 16px;
+        color: #000;
+    }
+
+    .pswp__button--zoom::before {
+        font-family: 'Font Awesome 6 Free';
+        content: '\f002';
+        font-weight: 900;
+        font-size: 16px;
+        color: #000;
+    }
+
+    /* Custom download button */
+    .pswp__button--download::before {
+        font-family: 'Font Awesome 6 Free';
+        content: '\f019';
+        font-weight: 900;
+        font-size: 16px;
+        color: #000;
+    }
+
+    /* Navigation arrows - fixed to avoid duplication */
+    .pswp__button--arrow--left,
+    .pswp__button--arrow--right {
+        background: rgba(255, 255, 255, 0.5) !important;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
         top: 50%;
-        transform: translateY(-50%);
-        z-index: 100;
+        margin-top: -20px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        position: absolute;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
     }
     
-    .pswp__custom-next {
-        position: absolute;
+    .pswp__button--arrow--left {
+        left: 20px;
+    }
+    
+    .pswp__button--arrow--right {
         right: 20px;
+    }
+
+    .pswp__button--arrow--left:hover,
+    .pswp__button--arrow--right:hover {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+
+    /* Override PhotoSwipe's default arrow styling */
+    .pswp__button--arrow--left:before,
+    .pswp__button--arrow--right:before {
+        background: none !important;
+        width: auto !important;
+        height: auto !important;
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        font-size: 16px;
+        position: absolute;
         top: 50%;
-        transform: translateY(-50%);
-        z-index: 100;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #000;
+    }
+
+    .pswp__button--arrow--left:before {
+        content: '\f104' !important;
+    }
+
+    .pswp__button--arrow--right:before {
+        content: '\f105' !important;
+    }
+
+    /* Consistent caption bar with glass effect */
+    .pswp__caption {
+        background: rgba(255, 255, 255, 0.5) !important;
+        height: 50px;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: 20px;
+        width: 70%;
+        max-width: 800px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+
+    .pswp__caption__center {
+        text-align: center;
+        max-width: 80%;
+        color: #000;
+        font-weight: 600;
+        padding: 0;
+        font-size: 16px;
+        background: transparent !important;
+        box-shadow: none;
+    }
+
+    /* Position the image to prevent overlap with top bar */
+    .pswp__img {
+        max-height: calc(100vh - 180px);
+        object-fit: contain;
+        margin-top: 45px;
+    }
+
+    /* Hide default button backgrounds */
+    .pswp__button--arrow--left:after,
+    .pswp__button--arrow--right:after {
+        display: none !important;
+    }
+
+    /* Responsive styles for PhotoSwipe */
+    @media (max-width: 768px) {
+        .pswp__top-bar {
+            max-width: 300px !important;
+            height: 50px !important;
+        }
+        
+        .pswp__button,
+        .download-button {
+            width: 32px !important;
+            height: 50px !important;
+        }
+        
+        .pswp__button--arrow--left,
+        .pswp__button--arrow--right {
+            width: 40px !important;
+            height: 40px !important;
+        }
+        
+        .pswp__img {
+            max-width: 95% !important;
+        }
+
+        .pswp__caption__center {
+            font-size: 14px !important;
+            padding: 8px 16px !important;
+        }
+    }
+
+    /* Ensure glass effect works on all browsers */
+    @supports (backdrop-filter: blur(10px)) {
+        .pswp__top-bar,
+        .pswp__caption,
+        .pswp__button--arrow--left,
+        .pswp__button--arrow--right {
+            backdrop-filter: blur(10px);
+        }
+    }
+    
+    @supports (-webkit-backdrop-filter: blur(10px)) {
+        .pswp__top-bar,
+        .pswp__caption,
+        .pswp__button--arrow--left,
+        .pswp__button--arrow--right {
+            -webkit-backdrop-filter: blur(10px);
+        }
+    }
+
+    /* Fix scroll-wrap */
+    .pswp__scroll-wrap {
+        overflow: visible !important;
+    }
+
+    /* Remove padding that was pushing the image down */
+    .pswp__container {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1200px) {
+        .product-grid {
+            grid-template-columns: repeat(3, minmax(220px, 1fr));
+        }
+    }
+
+    @media (max-width: 900px) {
+        .product-grid {
+            grid-template-columns: repeat(2, minmax(220px, 1fr));
+        }
+    }
+
+    @media (max-width: 600px) {
+        .product-grid {
+            grid-template-columns: repeat(1, minmax(220px, 1fr));
+        }
     }
 </style>
 {% endblock %}
 
-{% block body_classes %}{{ 'pdf-view' if pdf_view else '' }}{% endblock %}
-
-{% block container_classes %}max-w-full mx-auto p-4 shadow-lg{% endblock %}
-
-{% block header %}
-<div class="flex flex-col sm:flex-row justify-between items-center mb-4">
-    <div class="flex-1 text-center">
-        <h1 class="text-3xl font-bold uppercase italic">{{ title }}</h1>
-    </div>
-    <div class="flex-shrink-0 mt-2 sm:mt-0">
-        <button onclick="openFile()" type="button" class="text-xl text-white bg-[#7D563E] hover:bg-[#7D563E]/90 focus:ring-4 focus:outline-none focus:ring-[#7D563E]/50 rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:focus:ring-[#7D563E]/50 dark:hover:bg-[#7D563E]/30 me-2 mb-2">
-            ALBUM PRICE LIST
-        </button>
-    </div>
-</div>
-{% endblock %}
+{% block header_title %}<h1 class="header-title">{{ title|upper }}</h1>{% endblock %}
 
 {% block content %}
-<div id="content-wrapper" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mt-2">
+<div class="gallery-note">
+    <p>💡 Click on any image to open the gallery view</p>
+</div>
+
+<div class="product-grid">
     {% for product in products %}
-    <div class="text-xl border p-2 rounded-lg bg-white shadow-lg text-left image-container">
-        <a href="{{ url_for('static', filename=product[6]) }}" data-caption="Style #: {{ product[1] }} | Price: ${{ "%.2f"|format(product[5]|float) }}">
-            <img src="{{ url_for('static', filename=product[6]) }}" class="w-full h-80 object-contain rounded-lg">
+    <div class="product-card">
+        <a href="{{ product[6] }}" class="image-container" data-size="1024x1024" data-caption="Style #: {{ product[1] }} | Price: ${{ product[5] }}">
+            <img src="{{ product[6] }}" 
+                 alt="Style {{ product[1] }}"
+                 loading="lazy"
+                 data-fallback="https://placehold.co/400">
         </a>
-        <div class="border-t mt-2 pt-2">
-            <strong>Style #:</strong> <span class="ml-2">{{ product[1] }}</span>
-        </div>
-        <div class="border-t mt-2 pt-2">
-            <strong>Colors:</strong> <span class="ml-2">{{ product[2] }}</span>
-        </div>
-        <div class="border-t mt-2 pt-2">
-            <strong>Content:</strong> <span class="ml-2 content-result">{{ product[3] }}</span>
-        </div>
-        <div class="border-t mt-2 pt-2">
-            <strong>Sizes:</strong> <span class="ml-2">{{ product[4] }}</span>
-        </div>
-        <div class="border-t mt-2 pt-2">
-            <strong>Price:</strong> <span class="ml-2">${{ "%.2f"|format(product[5]|float) }}</span>
+        <div class="product-info">
+            <div class="style-number">Style # {{ product[1] }}</div>
+            <div class="product-details">
+                <div class="detail-row">
+                    <span class="detail-label">
+                        <i class="fas fa-palette"></i>
+                        Color:
+                    </span>
+                    <span class="detail-value">{{ product[2] }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">
+                        <i class="fas fa-tag"></i>
+                        Description:
+                    </span>
+                    <span class="detail-value">{{ product[3] }}</span>
+                </div>
+                <div class="detail-row sizes-detail">
+                    <span class="detail-label">
+                        <i class="fas fa-ruler"></i>
+                        Sizes:
+                    </span>
+                    <div class="detail-value size-details" data-size="{{ product[4] }}">{{ product[4] }}</div>
+                </div>
+                <div class="price">
+                    <i class="fas fa-dollar-sign"></i>
+                    {{ "%.2f"|format(product[5]|float) if product[5] and product[5]|string|trim is not none else "Not Available" }}
+                </div>
+            </div>
         </div>
     </div>
     {% endfor %}
 </div>
-{% endblock %}
 
-{% block outside_container %}
-<!-- PhotoSwipe Core -->
+<a href="{{ album_price_list_url }}" class="album-price" target="_blank">Album Price List</a>
+
+<!-- PhotoSwipe Template -->
 <div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="pswp__bg"></div>
     <div class="pswp__scroll-wrap">
@@ -267,11 +596,12 @@
         <div class="pswp__ui pswp__ui--hidden">
             <div class="pswp__top-bar">
                 <div class="pswp__counter"></div>
-                
-                <!-- Original PhotoSwipe buttons (hidden but kept for functionality) -->
-                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
-                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
-                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+                <div class="pswp__ui-buttons">
+                    <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+                    <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+                    <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+                    <button class="pswp__button pswp__button--download" title="Download image"></button>
+                </div>
                 <div class="pswp__preloader">
                     <div class="pswp__preloader__icn">
                         <div class="pswp__preloader__cut">
@@ -279,60 +609,6 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- Custom Tailwind Buttons -->
-                <div class="pswp__custom-buttons">
-                    <!-- Close Button -->
-                    <button class="pswp__custom-close bg-white hover:bg-gray-100 text-[rgb(69,69,69)] font-bold py-2 px-4 rounded inline-flex items-center shadow">
-                        <svg class="fill-current w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                            <path d="M10 8.586L2.929 1.515 1.515 2.929 8.586 10l-7.071 7.071 1.414 1.414L10 11.414l7.071 7.071 1.414-1.414L11.414 10l7.071-7.071-1.414-1.414L10 8.586z"/>
-                        </svg>
-                    </button>
-                    
-                    <!-- Fullscreen Button -->
-                    <button class="pswp__custom-fs bg-white hover:bg-gray-100 text-[rgb(69,69,69)] font-bold py-2 px-4 rounded inline-flex items-center shadow">
-                        <svg class="fill-current w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                            <path d="M1 1h6v2H3v4H1V1zm18 0h-6v2h4v4h2V1zM1 19h6v-2H3v-4H1v6zm18 0h-6v-2h4v-4h2v6z"/>
-                        </svg>
-                    </button>
-                    
-                    <!-- Zoom Button -->
-                    <button class="pswp__custom-zoom bg-white hover:bg-gray-100 text-[rgb(69,69,69)] font-bold py-2 px-4 rounded inline-flex items-center shadow">
-                        <svg class="fill-current w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                            <path d="M12.9 14.32a8 8 0 1 1 1.41-1.41l5.35 5.33-1.42 1.42-5.33-5.34zM8 14A6 6 0 1 0 8 2a6 6 0 0 0 0 12zM7 7V5h2v2h2v2H9v2H7V9H5V7h2z"/>
-                        </svg>
-                    </button>
-                    
-                    <!-- Download Button -->
-                    <a href="#" download class="pswp__custom-download bg-white hover:bg-gray-100 text-[rgb(69,69,69)] font-bold py-2 px-4 rounded inline-flex items-center shadow">
-                        <svg class="fill-current w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                            <path d="M13 8V2H7v6H2l8 8 8-8h-5zM0 18h20v2H0v-2z"/>
-                        </svg>
-                        <span>Download</span>
-                    </a>
-                </div>
-                
-                <!-- Custom Arrow Buttons -->
-                <div class="pswp__custom-prev">
-                    <button class="bg-white hover:bg-gray-100 text-[rgb(69,69,69)] font-bold py-2 px-4 rounded inline-flex items-center shadow">
-                        <svg class="fill-current w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                            <path d="M3.828 9l6.071-6.071-1.414-1.414L0 10l.707.707 7.778 7.778 1.414-1.414L3.828 11H20V9H3.828z"/>
-                        </svg>
-                    </button>
-                </div>
-                
-                <div class="pswp__custom-next">
-                    <button class="bg-white hover:bg-gray-100 text-[rgb(69,69,69)] font-bold py-2 px-4 rounded inline-flex items-center shadow">
-                        <svg class="fill-current w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                            <path d="M16.172 9l-6.071-6.071 1.414-1.414L20 10l-.707.707-7.778 7.778-1.414-1.414L16.172 11H0V9z"/>
-                        </svg>
-                    </button>
-                </div>
-                
-                <!-- Original button hidden but kept for functionality -->
-                <button class="pswp__button pswp__button--download" title="Download">
-                    <a href="#" download></a>
-                </button>
             </div>
             <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
                 <div class="pswp__share-tooltip"></div>
@@ -349,110 +625,425 @@
 
 {% block scripts %}
 <script>
-    function openFile() {
-        window.open("{{ url_for('static', filename='FW25 ALBUM PRICE LIST.pdf') }}", '_blank');
-    }
-
     document.addEventListener('DOMContentLoaded', function() {
-        var pswpElement = document.querySelectorAll('.pswp')[0];
-        var imageElements = document.querySelectorAll('.image-container a');
+        // Remove all the album price list handling code since we're using a direct link now
         
-        // Create an array of promises to load all images
-        var imagePromises = Array.from(imageElements).map(function(el) {
-            return new Promise(function(resolve) {
-                var img = new Image();
-                img.src = el.getAttribute('href');
-                img.onload = function() {
-                    resolve({
-                        element: el,
-                        style: el.getAttribute('data-caption').split('|')[0].split(':')[1].trim(),
-                        src: img.src,
-                        w: img.naturalWidth,
-                        h: img.naturalHeight,
-                        title: el.getAttribute('data-caption')
-                    });
-                };
-            });
+        // Error handling for images
+        document.querySelectorAll('img[data-fallback]').forEach(img => {
+            img.onerror = function() {
+                this.src = this.dataset.fallback;
+                this.classList.add('error');
+            };
         });
 
-        // Wait for all images to load and then sort them
-        Promise.all(imagePromises).then(function(loadedItems) {
-            // Sort items by style number
-            loadedItems.sort(function(a, b) {
-                return a.style.localeCompare(b.style);
-            });
-
-            // Add sorted items to the gallery
-            items = loadedItems.map(function(item) {
-                return {
-                    src: item.src,
-                    w: item.w,
-                    h: item.h,
-                    title: item.title
-                };
-            });
-
-            // Add click handlers to all image elements
-            imageElements.forEach(function(el, index) {
-                el.addEventListener('click', function(event) {
-                    event.preventDefault();
-                    // Find the correct index in the sorted array
-                    var style = el.getAttribute('data-caption').split('|')[0].split(':')[1].trim();
-                    var sortedIndex = loadedItems.findIndex(function(item) {
-                        return item.style === style;
-                    });
-                    
-                    var options = {
-                        index: sortedIndex,
-                        bgOpacity: 0.7,
-                        showHideOpacity: true
-                    };
-                    var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, options);
-                    
-                    // Wire up custom buttons
-                    gallery.listen('afterChange', function() {
-                        // Update download button href
-                        document.querySelector('.pswp__custom-download').href = items[gallery.getCurrentIndex()].src;
-                        document.querySelector('.pswp__button--download a').href = items[gallery.getCurrentIndex()].src;
-                    });
-                    
-                    // Close button
-                    document.querySelector('.pswp__custom-close').addEventListener('click', function() {
-                        gallery.close();
-                    });
-                    
-                    // Fullscreen button
-                    document.querySelector('.pswp__custom-fs').addEventListener('click', function() {
-                        document.querySelector('.pswp__button--fs').click();
-                    });
-                    
-                    // Zoom button
-                    document.querySelector('.pswp__custom-zoom').addEventListener('click', function() {
-                        document.querySelector('.pswp__button--zoom').click();
-                    });
-                    
-                    // Previous arrow
-                    document.querySelector('.pswp__custom-prev button').addEventListener('click', function() {
-                        gallery.prev();
-                    });
-                    
-                    // Next arrow
-                    document.querySelector('.pswp__custom-next button').addEventListener('click', function() {
-                        gallery.next();
-                    });
-                    
-                    gallery.listen('beforeChange', function() {
-                        document.getElementById('content-wrapper').classList.add('blurred');
-                    });
-                    
-                    gallery.listen('close', function() {
-                        document.getElementById('content-wrapper').classList.remove('blurred');
-                    });
-                    
-                    gallery.init();
+        // Parse size ratios
+        function parseSizeRatios(sizeString) {
+            if (!sizeString) return { isRatio: false, sizeString: "" };
+            
+            // Check if the string contains commas (size ratio format)
+            if (sizeString.includes(',')) {
+                const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
+                // Split by comma and handle empty values
+                const quantities = sizeString.split(',').map(num => {
+                    const trimmed = num.trim();
+                    return trimmed === '' ? 0 : parseInt(trimmed);
                 });
-            });
+                let total = 0;
+                
+                const ratios = sizes.map((size, index) => {
+                    const quantity = quantities[index] || 0;
+                    total += quantity;
+                    return {
+                        size,
+                        quantity
+                    };
+                });
+                
+                return {
+                    isRatio: true,
+                    ratios,
+                    total
+                };
+            } else {
+                // Regular size string format
+                return {
+                    isRatio: false,
+                    sizeString
+                };
+            }
+        }
+
+        // Update size displays with tabular format
+        document.querySelectorAll('.detail-value[data-size]').forEach(element => {
+            const sizeString = element.getAttribute('data-size');
+            const result = parseSizeRatios(sizeString);
+            
+            if (result.isRatio) {
+                const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
+                
+                // Create a tabular display with labels on top
+                let sizesHTML = `
+                    <div class="size-details">
+                        <div class="sizes-grid">
+                `;
+                
+                // Add size labels (S, M, L, XL, XXL)
+                sizes.forEach(size => {
+                    sizesHTML += `<div class="size-label">${size}</div>`;
+                });
+                
+                // Add size values (quantities)
+                result.ratios.forEach(ratio => {
+                    sizesHTML += `<div class="size-value">${ratio.quantity}</div>`;
+                });
+                
+                sizesHTML += `
+                        </div>
+                        <div class="size-total">Total: ${result.total}</div>
+                    </div>
+                `;
+                
+                element.innerHTML = sizesHTML;
+            } else {
+                // Display the regular size string as is
+                element.textContent = result.sizeString;
+            }
         });
+
+        // PhotoSwipe initialization using standard approach
+        var initPhotoSwipeFromDOM = function(gallerySelector) {
+            // Parse slide data from DOM elements
+            var parseThumbnailElements = function(el) {
+                var thumbElements = el.querySelectorAll('.image-container'),
+                    numNodes = thumbElements.length,
+                    items = [],
+                    figureEl,
+                    linkEl,
+                    size,
+                    item;
+
+                for(var i = 0; i < numNodes; i++) {
+                    linkEl = thumbElements[i]; // <a> element
+                    
+                    // Include only <a> elements
+                    if(linkEl.tagName !== 'A') {
+                        continue;
+                    }
+
+                    // Get size from data-size attribute
+                    if(linkEl.getAttribute('data-size')) {
+                        size = linkEl.getAttribute('data-size').split('x');
+                    } else {
+                        // Default size if not specified
+                        size = ['1024', '1024'];
+                    }
+
+                    // Create slide object
+                    item = {
+                        src: linkEl.getAttribute('href'),
+                        w: parseInt(size[0], 10),
+                        h: parseInt(size[1], 10),
+                        title: linkEl.getAttribute('data-caption').replace(/\$(\d+(\.\d+)?)/, function(match, price) {
+                            return '$ ' + parseFloat(price).toFixed(2);
+                        })
+                    };
+
+                    if(linkEl.querySelector('img')) {
+                        // Use image as thumbnail
+                        item.msrc = linkEl.querySelector('img').getAttribute('src');
+                    }
+                    
+                    item.el = linkEl; // Save link to element for reference
+                    items.push(item);
+                }
+
+                return items;
+            };
+
+            // Find nearest parent element
+            var closest = function closest(el, fn) {
+                return el && (fn(el) ? el : closest(el.parentNode, fn));
+            };
+
+            // Triggers when user clicks on thumbnail
+            var onThumbnailsClick = function(e) {
+                e = e || window.event;
+                e.preventDefault ? e.preventDefault() : e.returnValue = false;
+
+                var eTarget = e.target || e.srcElement;
+
+                // Find closest link element
+                var clickedListItem = closest(eTarget, function(el) {
+                    return (el.tagName === 'A');
+                });
+
+                if(!clickedListItem) {
+                    return;
+                }
+
+                // Find index of clicked item
+                var clickedGallery = document.querySelector(gallerySelector),
+                    childNodes = clickedGallery.querySelectorAll('.image-container'),
+                    numChildNodes = childNodes.length,
+                    nodeIndex = 0,
+                    index;
+
+                for (var i = 0; i < numChildNodes; i++) {
+                    if(childNodes[i] === clickedListItem) {
+                        index = nodeIndex;
+                        break;
+                    }
+                    nodeIndex++;
+                }
+
+                if(index >= 0) {
+                    // Open PhotoSwipe if valid index found
+                    openPhotoSwipe(index, clickedGallery);
+                }
+                return false;
+            };
+
+            // Parse picture index and gallery index from URL (#&pid=1&gid=2)
+            var photoswipeParseHash = function() {
+                var hash = window.location.hash.substring(1),
+                params = {};
+
+                if(hash.length < 5) {
+                    return params;
+                }
+
+                var vars = hash.split('&');
+                for (var i = 0; i < vars.length; i++) {
+                    if(!vars[i]) {
+                        continue;
+                    }
+                    var pair = vars[i].split('=');  
+                    if(pair.length < 2) {
+                        continue;
+                    }           
+                    params[pair[0]] = pair[1];
+                }
+
+                if(params.gid) {
+                    params.gid = parseInt(params.gid, 10);
+                }
+
+                return params;
+            };
+
+            // Open PhotoSwipe
+            var openPhotoSwipe = function(index, galleryElement, disableAnimation, fromURL) {
+                var pswpElement = document.querySelectorAll('.pswp')[0],
+                    gallery,
+                    options,
+                    items;
+
+                items = parseThumbnailElements(galleryElement);
+
+                // Define options
+                options = {
+                    // Core options
+                    galleryUID: galleryElement.getAttribute('data-pswp-uid'),
+                    getThumbBoundsFn: function(index) {
+                        // Get element and position of thumbnail
+                        var thumbnail = items[index].el.querySelector('img'),
+                            pageYScroll = window.pageYOffset || document.documentElement.scrollTop,
+                            rect = thumbnail.getBoundingClientRect(); 
+
+                        return {x:rect.left, y:rect.top + pageYScroll, w:rect.width};
+                    },
+                    
+                    // UI options
+                    closeOnScroll: false,
+                    history: false,
+                    focus: true,
+                    modal: true,
+                    
+                    // Zoom options
+                    maxSpreadZoom: 4,                    
+                    getDoubleTapZoom: function(isMouseClick, item) {
+                        return isMouseClick ? 2.5 : 1.8;
+                    },
+                    
+                    // Feature flags
+                    showHideOpacity: true,
+                    bgOpacity: 0.8,
+                    spacing: 0.12,
+                    allowPanToNext: true,
+                    pinchToClose: false,
+                    
+                    // Additional UI
+                    shareEl: false,
+                    fullscreenEl: true,
+                    zoomEl: true,
+                    arrowEl: true,
+                    captionEl: true,
+                    
+                    // Add mouse handling for precise zooming
+                    mouseUsed: true,
+                    clickToCloseNonZoomable: false
+                };
+
+                // PhotoSwipe opened from URL
+                if(fromURL) {
+                    if(options.galleryPIDs) {
+                        for(var j = 0; j < items.length; j++) {
+                            if(items[j].pid == index) {
+                                options.index = j;
+                                break;
+                            }
+                        }
+                    } else {
+                        options.index = parseInt(index, 10) - 1;
+                    }
+                } else {
+                    options.index = parseInt(index, 10);
+                }
+
+                // Exit if index not found
+                if(isNaN(options.index) ) {
+                    return;
+                }
+
+                if(disableAnimation) {
+                    options.showAnimationDuration = 0;
+                }
+
+                // Initialize and load proper dimensions
+                gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, options);
+                
+                // Preload images to ensure proper dimensions
+                gallery.listen('gettingData', function(index, item) {
+                    if(!item.w || !item.h || item.w < 700) {
+                        var img = new Image();
+                        img.onload = function() {
+                            item.w = Math.max(this.width, 1024);
+                            item.h = Math.max(this.height, 1024);
+                            gallery.updateSize(true);
+                        };
+                        img.src = item.src;
+                    }
+                });
+                
+                // Add precise zoom handling
+                gallery.listen('initialZoomInEnd', function() {
+                    document.querySelector('.pswp').addEventListener('click', function(e) {
+                        if(e.target.classList.contains('pswp__img')) {
+                            if(gallery.getZoomLevel() > 1) {
+                                gallery.zoomTo(1, {x: gallery.viewportSize.x/2, y: gallery.viewportSize.y/2}, 300);
+                            } else {
+                                var rect = e.target.getBoundingClientRect();
+                                var x = e.clientX - rect.left;
+                                var y = e.clientY - rect.top;
+                                gallery.zoomTo(2.5, {x: x, y: y}, 300);
+                            }
+                        }
+                    });
+                });
+                
+                // Fixed download button functionality that works with Cloudinary
+                gallery.listen('afterChange', function() {
+                    const downloadButton = document.querySelector('.pswp__button--download');
+                    
+                    if (downloadButton) {
+                        // Remove old event listeners
+                        const newDownloadButton = downloadButton.cloneNode(true);
+                        if (downloadButton.parentNode) {
+                            downloadButton.parentNode.replaceChild(newDownloadButton, downloadButton);
+                            
+                            // Add fresh event listener
+                            newDownloadButton.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                
+                                if (gallery.currItem && gallery.currItem.src) {
+                                    let imageUrl = gallery.currItem.src;
+                                    
+                                    // For Cloudinary URLs - use direct download
+                                    if (imageUrl.includes('cloudinary.com')) {
+                                        // Convert to fetch format which works better for downloading
+                                        imageUrl = imageUrl.replace(/\/upload\/.*?\/v\d+\//, '/upload/f_jpg/');
+                                        
+                                        // Extract style number for filename
+                                        let filename = 'image.jpg';
+                                        if (gallery.currItem.title) {
+                                            const styleMatch = gallery.currItem.title.match(/Style #:\s*([A-Za-z0-9-]+)/i);
+                                            if (styleMatch && styleMatch[1]) {
+                                                filename = 'Style-' + styleMatch[1] + '.jpg';
+                                            }
+                                        }
+                                        
+                                        // Create an anchor and trigger download
+                                        const a = document.createElement('a');
+                                        a.href = imageUrl;
+                                        a.download = filename;
+                                        a.style.display = 'none';
+                                        document.body.appendChild(a);
+                                        
+                                        // Use fetch API to get the image as a blob
+                                        fetch(imageUrl)
+                                            .then(response => response.blob())
+                                            .then(blob => {
+                                                // Create blob URL and use it for download
+                                                const url = window.URL.createObjectURL(blob);
+                                                a.href = url;
+                                                a.click();
+                                                setTimeout(() => {
+                                                    window.URL.revokeObjectURL(url);
+                                                    document.body.removeChild(a);
+                                                }, 100);
+                                            })
+                                            .catch(err => {
+                                                console.error('Error downloading image:', err);
+                                                // Fallback - try direct download
+                                                window.open(imageUrl, '_blank');
+                                            });
+                                        
+                                        console.log('Download initiated for:', filename);
+                                    } else {
+                                        // For non-Cloudinary URLs - use standard download
+                                        const a = document.createElement('a');
+                                        a.href = imageUrl;
+                                        a.download = 'image.jpg';
+                                        document.body.appendChild(a);
+                                        a.click();
+                                        setTimeout(() => document.body.removeChild(a), 100);
+                                    }
+                                }
+                            });
+                        }
+                    }
+                });
+                
+                gallery.init();
+            };
+
+            // Loop through all gallery elements and bind events
+            var galleryElements = document.querySelectorAll(gallerySelector);
+
+            for(var i = 0, l = galleryElements.length; i < l; i++) {
+                galleryElements[i].setAttribute('data-pswp-uid', i+1);
+                galleryElements[i].onclick = onThumbnailsClick;
+            }
+
+            // Check if URL has hash for photoswipe
+            var hashData = photoswipeParseHash();
+            if(hashData.pid && hashData.gid) {
+                openPhotoSwipe(hashData.pid, galleryElements[hashData.gid-1], true, true);
+            }
+        };
+
+        // Initialize PhotoSwipe on the product grid
+        initPhotoSwipeFromDOM('.product-grid');
+        
+        // Define productsData if needed
+        var productsData = [];
+        try {
+            productsData = JSON.parse({{ products|tojson|safe }});
+        } catch (e) {
+            console.error("Error parsing products data:", e);
+        }
     });
-</script>
+</script>    
 {% endblock %}
+

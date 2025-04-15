@@ -1,19 +1,71 @@
 {% extends 'base.html' %}
 
-{% block title %}List of Line Sheets - Line Sheet Manager{% endblock %}
+{% block title %}Line Sheets - Line Sheet Manager{% endblock %}
 
-{% block header_title %}List of Line Sheets{% endblock %}
+{% block header_title %}Your Line Sheets{% endblock %}
+
+{% block additional_styles %}
+<style>
+  .form-card {
+    position: relative;
+    z-index: 1;
+    background-color: var(--color-bg-secondary);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    box-shadow: 0 2px 5px var(--shadow-color);
+    transition: all 0.3s ease;
+  }
+  
+  .form-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px var(--shadow-color);
+    z-index: 2;
+  }
+</style>
+{% endblock %}
 
 {% block header_actions %}
-<a href="/" class="bg-gray-500 text-white px-4 py-2 rounded-lg">Back to Home</a>
+<a href="/" class="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-4 py-2 rounded-lg hover:from-indigo-600 hover:to-purple-600 transition-all shadow-sm hover:shadow-md" style="position: relative; z-index: 20;">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+    <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+  </svg>
+  Back to Home
+</a>
 {% endblock %}
 
 {% block content %}
-<ul>
-    {% for line_sheet in line_sheets %}
-    <li class="mb-2">
-        <a href="{{ url_for('view_line_sheet', filename=line_sheet[2]) }}" class="text-blue-500 hover:underline">{{ line_sheet[1] }} ({{ line_sheet[3] }})</a>
-    </li>
-    {% endfor %}
-</ul>
+<div class="mt-4">
+  {% if line_sheets %}
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {% for line_sheet in line_sheets %}
+        <a href="{{ url_for('view_line_sheet', filename=line_sheet[2]) }}" class="block">
+          <div class="form-card h-full group">
+            <div class="flex justify-between items-start">
+              <div class="flex-1">
+                <h3 class="font-medium text-lg mb-1 group-hover:text-indigo-600 transition-colors dark:group-hover:text-indigo-400" style="color: var(--color-text-primary);">{{ line_sheet[1] }}</h3>
+                <p class="text-sm" style="color: var(--color-text-secondary);">Created: {{ line_sheet[3]|replace('T', ' ')|replace('Z', '') }}</p>
+              </div>
+              <div class="h-10 w-10 rounded-full bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center text-purple-600 dark:text-purple-300 group-hover:bg-purple-200 dark:group-hover:bg-purple-800/40 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M9 2a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V6.414A2 2 0 0016.414 5L14 2.586A2 2 0 0012.586 2H9z" />
+                  <path d="M3 8a2 2 0 012-2h2a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="flex flex-col items-center justify-center py-12 text-center">
+      <div class="h-16 w-16 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-500 dark:text-purple-300 mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm1 3a1 1 0 100 2h12a1 1 0 100-2H4zm0 4a1 1 0 100 2h12a1 1 0 100-2H4z" clip-rule="evenodd" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-medium mb-1" style="color: var(--color-text-primary);">No Line Sheets Found</h3>
+      <p style="color: var(--color-text-secondary);" class="max-w-md">Create your first line sheet by going back to the home page and uploading product data.</p>
+    </div>
+  {% endif %}
+</div>
 {% endblock %}

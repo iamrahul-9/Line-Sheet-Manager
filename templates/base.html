@@ -1,18 +1,102 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Line Sheet Manager{% endblock %}</title>
+    
+    <!-- Dynamic Favicon -->
+    <link rel="icon" id="favicon" href="{{ url_for('static', filename='favicon-light.svg') }}" type="image/svg+xml">
+    <link rel="alternate icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.svg') }}" type="image/svg+xml">
+    <meta name="theme-color" content="#6366f1">
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                        },
+                    },
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
     
     {% block additional_head %}{% endblock %}
     
     <style>
+        :root {
+            --color-bg-primary: #f5f5f5;
+            --color-bg-secondary: #ffffff;
+            --color-text-primary: rgb(31, 41, 55);
+            --color-text-secondary: rgb(75, 85, 99);
+            --color-border: #e5e7eb;
+            --color-input-bg: #ffffff;
+            --color-input-border: #d1d5db;
+            --color-loader-bg: rgba(255, 255, 255, 0.9);
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+        
+        .dark {
+            --color-bg-primary: #121212;
+            --color-bg-secondary: #1e1e1e;
+            --color-text-primary: #f3f4f6;
+            --color-text-secondary: #9ca3af;
+            --color-border: #374151;
+            --color-input-bg: #2d3748;
+            --color-input-border: #4b5563;
+            --color-loader-bg: rgba(0, 0, 0, 0.85);
+            --shadow-color: rgba(0, 0, 0, 0.5);
+        }
+        
         body {
             font-family: 'Poppins', sans-serif;
-            color: rgb(21, 21, 21); /* Matt black font color */
+            color: var(--color-text-primary);
+            background-color: var(--color-bg-primary);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        /* Base Styles */
+        .form-input {
+            @apply border p-3 rounded-lg w-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent;
+            background-color: var(--color-input-bg);
+            border-color: var(--color-input-border);
+            color: var(--color-text-primary);
+        }
+          
+        .form-label {
+            @apply text-sm font-medium mb-1 block;
+            color: var(--color-text-secondary);
+        }
+          
+        .form-card {
+            @apply p-6 border rounded-xl transition-all duration-300 hover:shadow-md;
+            background-color: var(--color-bg-secondary);
+            border-color: var(--color-border);
+            box-shadow: 0 1px 3px var(--shadow-color);
+        }
+          
+        .form-btn {
+            @apply px-6 py-3 rounded-lg font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 transform hover:scale-[1.02] active:scale-[0.98];
         }
         
         /* Loader Styles */
@@ -22,7 +106,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(255, 255, 255, 0.9);
+            background-color: var(--color-loader-bg);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -34,27 +118,96 @@
             opacity: 0;
             visibility: hidden;
         }
+        
+        /* Gradient Border */
+        .gradient-border {
+            position: relative;
+            border-radius: 0.75rem;
+            background: var(--color-bg-secondary);
+            padding: 1px;
+        }
+          
+        .gradient-border::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 0.75rem;
+            padding: 1px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #d946ef);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0.5;
+            transition: opacity 0.3s ease;
+        }
+          
+        .gradient-border:hover::before {
+            opacity: 1;
+        }
+        
+        /* Dark mode toggle switch */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        
+        .theme-toggle-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        .theme-toggle-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
     </style>
     {% block additional_styles %}{% endblock %}
 </head>
-<body class="bg-gray-100 p-5 {% block body_classes %}{% endblock %}">
+<body class="min-h-screen {% block body_classes %}{% endblock %}">
     <!-- Loading Overlay -->
     <div id="loader-overlay" class="loader-overlay">
         <div class="flex flex-col items-center">
-            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
-            <p class="mt-4 text-gray-700 font-medium">Loading...</p>
+            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600"></div>
+            <p class="mt-4 font-medium" style="color: var(--color-text-primary);">Loading...</p>
         </div>
     </div>
     
-    <div class="{% block container_classes %}max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-lg{% endblock %}">
-        {% block header %}
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold">{% block header_title %}Line Sheet Manager{% endblock %}</h1>
-            {% block header_actions %}{% endblock %}
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+        <div class="{% block container_classes %}gradient-border p-6 rounded-xl shadow-sm{% endblock %}">
+            {% block header %}
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl md:text-3xl font-bold" style="color: var(--color-text-primary);">{% block header_title %}Line Sheet Manager{% endblock %}</h1>
+                {% block header_actions %}{% endblock %}
+            </div>
+            {% endblock %}
+            
+            {% block content %}{% endblock %}
         </div>
-        {% endblock %}
-        
-        {% block content %}{% endblock %}
+    </div>
+    
+    <!-- Theme Toggle Button -->
+    <div class="theme-toggle">
+        <div class="theme-toggle-btn" id="theme-toggle">
+            <svg xmlns="http://www.w3.org/2000/svg" id="moon-icon" class="h-5 w-5 hidden" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" id="sun-icon" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+            </svg>
+        </div>
     </div>
     
     {% block outside_container %}{% endblock %}
@@ -75,7 +228,69 @@
                 const loader = document.getElementById('loader-overlay');
                 loader.classList.add('loader-hidden');
             }, 3000);
+            
+            // Theme toggle functionality
+            const themeToggle = document.getElementById('theme-toggle');
+            const moonIcon = document.getElementById('moon-icon');
+            const sunIcon = document.getElementById('sun-icon');
+            const htmlElement = document.documentElement;
+            const favicon = document.getElementById('favicon');
+            const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+            
+            // Check for saved theme preference or use device preference
+            const savedTheme = localStorage.getItem('theme');
+            
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                applyDarkMode();
+            } else {
+                applyLightMode();
+            }
+            
+            // Toggle theme on button click
+            themeToggle.addEventListener('click', function() {
+                if (htmlElement.classList.contains('dark')) {
+                    applyLightMode();
+                } else {
+                    applyDarkMode();
+                }
+            });
+            
+            function applyDarkMode() {
+                htmlElement.classList.add('dark');
+                moonIcon.classList.add('hidden');
+                sunIcon.classList.remove('hidden');
+                localStorage.setItem('theme', 'dark');
+                
+                // Change favicon to dark mode version
+                favicon.href = "{{ url_for('static', filename='favicon-dark.svg') }}";
+                
+                // Update theme-color meta tag
+                metaThemeColor.setAttribute('content', '#1e1e1e');
+            }
+            
+            function applyLightMode() {
+                htmlElement.classList.remove('dark');
+                moonIcon.classList.remove('hidden');
+                sunIcon.classList.add('hidden');
+                localStorage.setItem('theme', 'light');
+                
+                // Change favicon to light mode version
+                favicon.href = "{{ url_for('static', filename='favicon-light.svg') }}";
+                
+                // Update theme-color meta tag
+                metaThemeColor.setAttribute('content', '#6366f1');
+            }
+            
+            // Add listener for system theme changes
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                const newTheme = e.matches ? 'dark' : 'light';
+                if (newTheme === 'dark') {
+                    applyDarkMode();
+                } else {
+                    applyLightMode();
+                }
+            });
         });
     </script>
 </body>
-</html> 
+</html>
