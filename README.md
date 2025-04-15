@@ -4,7 +4,7 @@ A web application to manage line sheets for fashion collections with Cloudinary 
 
 ## Recent Changes
 
-### Updates (Current Date)
+### April 15,2025
 
 - **Cloudinary Upload Optimization**: Added check to skip uploading images that already exist in Cloudinary to prevent duplicate uploads
 - **PDF Handling Improvement**: Fixed album price list PDF handling to preserve original filenames and correctly include .pdf extension
@@ -15,7 +15,7 @@ A web application to manage line sheets for fashion collections with Cloudinary 
 
 ## Changelog
 
-### April 8, 2024
+### April 8, 2025
 - Migrated to Cloudinary for image hosting:
   - Added Cloudinary integration for image storage and delivery
   - Created migration script for existing images
@@ -35,7 +35,7 @@ A web application to manage line sheets for fashion collections with Cloudinary 
   - Enhanced visual hierarchy in product cards
   - Improved responsive design for size displays
 
-### April 7, 2024
+### April 7, 2025
 - Optimized project structure by removing redundant file storage:
   - Removed `seed_data` directory and simplified file organization
   - Modified application to use Excel file directly from `static` directory
@@ -51,13 +51,13 @@ A web application to manage line sheets for fashion collections with Cloudinary 
   - Changed default line sheet title to "MINKAS FALL/WINTER 2025"
   - Updated seed data loading process to use the new title
 
-### April 4, 2024
+### April 4, 2025
 - Environment and deployment improvements:
   - Set up virtual environment for dependency management
   - Added requirements.txt with specific package versions
   - Configured Flask debug mode for development
 
-### April 3, 2024
+### April 3, 2025
 - Initial project setup:
   - Created Flask application with user authentication
   - Implemented SQLite database for product storage
