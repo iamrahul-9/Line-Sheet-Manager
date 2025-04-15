@@ -145,7 +145,7 @@ def init_db():
         # Check if the line_sheet_id column exists in the products table
         cursor = conn.cursor()
         cursor.execute("PRAGMA table_info(products)")
-        columns = [col[1] for col in cursor.fetchall()]
+        columns = [col[1] for col in cursor.fetchall()]  # Fixed missing 'in' keyword
         
         # Add line_sheet_id column if it doesn't exist
         if 'line_sheet_id' not in columns:
@@ -205,6 +205,32 @@ def logout():
     session.pop('logged_in', None)
     return redirect(url_for('login'))
 
+def count_uploaded_images():
+    """Count the number of products with uploaded images"""
+    try:
+        with sqlite3.connect("products.db") as conn:
+            cursor = conn.cursor()
+            # Count products with non-empty image field
+            cursor.execute("SELECT COUNT(*) FROM products WHERE image IS NOT NULL AND image != ''")
+            total_count = cursor.fetchone()[0]
+            return total_count
+    except Exception as e:
+        logging.error(f"Error counting uploaded images: {e}")
+        return 0
+
+def count_collection_images(collection_name):
+    """Count images uploaded for a specific collection"""
+    try:
+        with sqlite3.connect("products.db") as conn:
+            cursor = conn.cursor()
+            # Count images where the URL contains the collection name
+            cursor.execute("SELECT COUNT(*) FROM products WHERE image LIKE ?", (f'%/{collection_name}/%',))
+            collection_count = cursor.fetchone()[0]
+            return collection_count
+    except Exception as e:
+        logging.error(f"Error counting collection images: {e}")
+        return 0
+
 @app.route('/')
 def index():
     if not session.get('logged_in'):
@@ -217,28 +243,96 @@ def index():
     products = [(id, style, colors, description, sizes, price, image if image else '') 
                 for id, style, colors, description, sizes, price, image, line_sheet_id in products]
     
-    return render_template('index.html', products=products)
+    # Get image upload count
+    uploaded_count = count_uploaded_images()
+    
+    return render_template('index.html', products=products, uploaded_count=uploaded_count)
+
+# Add this helper function to check if an image already exists in Cloudinary
+def image_exists_in_cloudinary(public_id):
+    """Check if image with given public_id already exists in Cloudinary"""
+    try:
+        # Try to get image information from Cloudinary
+        cloudinary.api.resource(public_id)
+        # If no exception is raised, the image exists
+        return True
+    except Exception as e:
+        if "not found" in str(e).lower():
+            # Resource doesn't exist
+            return False
+        else:
+            # Some other error occurred
+            logging.error(f"Error checking if image exists in Cloudinary: {e}")
+            # Assume it doesn't exist if we couldn't check
+            return False
 
 @app.route('/upload-image', methods=['POST'])
 def upload_image():
     if 'image' not in request.files:
         return "No image part in the request.", 400
-    
     file = request.files['image']
     if file.filename == '':
         return "No selected file.", 400
-    
-    # Get the style number for naming the image
+    # Get the style number
     style = request.form.get('style', '')
+    collection_name = request.form.get('collection_name', '').strip()
     if not style:
         return "Style number is required for image upload.", 400
-    
     if file:
         try:
-            # Upload to Cloudinary with style number as public_id, without folder structure
+            # Get original filename for reference
+            original_filename = secure_filename(file.filename)
+            logging.info(f"Processing file: {original_filename}, style: {style}")
+            # First, always try to remove PICTURES prefix regardless of case or separator
+            clean_style = re.sub(r'(?i)pictures[_-]?', '', style)
+            
+            # Extract just the style code if it matches the pattern (like CM-720)
+            style_match = re.search(r'([A-Z]{1,3}[-_]?\d{1,4})', clean_style)
+            if style_match:
+                clean_style = style_match.group(1)
+                logging.info(f"Style code extracted: {clean_style}")
+            else:
+                logging.info(f"No style code pattern found, using cleaned style: {clean_style}")
+            
+            # Double-check there's no PICTURES prefix left
+            if re.search(r'(?i)pictures', clean_style):
+                logging.warning(f"PICTURES still in style after cleanup: {clean_style}")
+                clean_style = re.sub(r'(?i)pictures[_-]?', '', clean_style)
+            # Get original filename for reference
+            # Upload to Cloudinary without collection name folder
+            public_id = clean_style
+            logging.info(f"Final public_id for upload: {public_id}")
+            
+            # Check if image already exists in Cloudinary
+            if image_exists_in_cloudinary(public_id):
+                logging.info(f"Style {public_id} already uploaded to Cloudinary - skipping upload")
+                
+                # Get the URL for the existing image
+                image_url = get_cloudinary_url(
+                    public_id,
+                    transformation={
+                        'quality': 'auto',
+                        'fetch_format': 'auto'
+                    }
+                )
+                
+                if not image_url:
+                    raise Exception("Failed to generate Cloudinary URL for existing image")
+                
+                # Update the database with the existing Cloudinary URL
+                with sqlite3.connect("products.db") as conn:
+                    conn.execute(
+                        "UPDATE products SET image = ? WHERE style = ?",
+                        (image_url, style)
+                    )
+                
+                logging.info(f"Image already in Cloudinary, database updated with URL")
+                return redirect(url_for('index'))
+            
+            # If image doesn't exist, proceed with upload
             result = cloudinary.uploader.upload(
                 file,
-                public_id=f"{style}",  # No folder structure in the public_id
+                public_id=public_id,
                 resource_type="image",
                 format="webp",
                 overwrite=True,
@@ -247,7 +341,7 @@ def upload_image():
             
             # Get the secure URL with proper transformations
             image_url = get_cloudinary_url(
-                f"{style}",  # No folder structure
+                public_id,
                 transformation={
                     'quality': 'auto',
                     'fetch_format': 'auto'
@@ -265,6 +359,11 @@ def upload_image():
                 )
             
             logging.info(f"Image uploaded to Cloudinary: {image_url}")
+            
+            # Get updated count after upload
+            uploaded_count = count_uploaded_images()
+            flash(f"Image uploaded successfully! Total images: {uploaded_count}")
+                
             return redirect(url_for('index'))
             
         except Exception as e:
@@ -287,93 +386,164 @@ def upload_directory():
     errors = []
     collection_products = []
     
+    # Get initial count before upload
+    initial_count = count_uploaded_images()
+    
     # Generate a safe filename
     safe_filename = re.sub(r'[^a-zA-Z0-9_-]', '_', title.lower())
     line_sheet_filename = f"{safe_filename}.html"
     
-    # Create the line sheet first to get its ID
+    # Create database connection
     with sqlite3.connect("products.db") as conn:
         cursor = conn.cursor()
+            
+        # Create the line sheet first to get its ID
         cursor.execute(
             "INSERT INTO line_sheets (title, filename) VALUES (?, ?)",
             (title, line_sheet_filename)
         )
         line_sheet_id = cursor.lastrowid
     
-    for file in files:
-        if file.filename == '':
-            continue
-            
-        try:
-            # Get original filename and remove any prefix that matches collection name
-            filename = secure_filename(file.filename)
-            name_without_ext = os.path.splitext(filename)[0]
-            
-            # Remove any prefix that matches collection name (case insensitive)
-            collection_prefix = collection_name.replace(' ', '_').lower() + '_'
-            if name_without_ext.lower().startswith(collection_prefix):
-                name_without_ext = name_without_ext[len(collection_prefix):]
-            
-            # Use only the style number as the public_id, without any folder structure
-            # This will save it with just the original filename without prefix
-            public_id = f"{name_without_ext}"
-            
-            # Upload to Cloudinary
-            result = cloudinary.uploader.upload(
-                file,
-                public_id=public_id,  # No folder structure in the public_id
-                resource_type="image",
-                format="webp",
-                overwrite=True,
-                invalidate=True
-            )
-            
-            # Get the secure URL
-            image_url = get_cloudinary_url(
-                public_id,
-                transformation={
-                    'quality': 'auto',
-                    'fetch_format': 'auto'
+        for file in files:
+            if file.filename == '':
+                continue
+                
+            try:
+                # Get original filename for reference
+                original_filename = secure_filename(file.filename)
+                logging.info(f"Processing file: {original_filename}")
+                
+                # Clean up the filename - remove spaces and special characters
+                clean_name = re.sub(r'[^a-zA-Z0-9_-]', '_', original_filename.rsplit('.', 1)[0])
+                
+                # Extract just the style code if it matches the pattern (like CM-720)
+                style_match = re.search(r'([A-Z]{1,3}[-_]?\d{1,4})', clean_name)
+                if style_match:
+                    # Use just the style code if found
+                    clean_name = style_match.group(1)
+                    logging.info(f"Style code extracted: {clean_name}")
+                else:
+                    # Remove any collection name prefix
+                    collection_prefix = collection_name.replace(' ', '_').lower() + '_'
+                    if clean_name.lower().startswith(collection_prefix):
+                        clean_name = clean_name[len(collection_prefix):]
+                    logging.info(f"No style code pattern found, using cleaned name: {clean_name}")
+                
+                # Double-check there's no PICTURES prefix left
+                if re.search(r'(?i)pictures', clean_name):
+                    logging.warning(f"PICTURES still in name after cleanup: {clean_name}")
+                    clean_name = re.sub(r'(?i)pictures[_-]?', '', clean_name)
+                
+                # Make sure name is unique by adding timestamp if needed
+                if not clean_name or clean_name.lower() == collection_name.lower():
+                    timestamp = int(datetime.now().timestamp())
+                    clean_name = f"{timestamp}"  # Fallback to timestamp if no valid name found
+                    logging.warning(f"Using generated name: {clean_name}")
+                
+                public_id = clean_name
+                logging.info(f"Final public_id for upload: {public_id}")
+                
+                # Check if image already exists in Cloudinary
+                if image_exists_in_cloudinary(public_id):
+                    logging.info(f"Style {public_id} already uploaded to Cloudinary - skipping upload")
+                    
+                    # Get the URL for the existing image
+                    image_url = get_cloudinary_url(
+                        public_id,
+                        transformation={
+                            'quality': 'auto',
+                            'fetch_format': 'auto'
+                        }
+                    )
+                    
+                    if not image_url:
+                        logging.error(f"Failed to generate Cloudinary URL for existing image {public_id}")
+                        continue  # Skip this file
+                        
+                    # Create a product entry for this collection
+                    product = {
+                        'style': clean_name,
+                        'image': image_url,
+                        'colors': '',
+                        'description': '',
+                        'sizes': '',
+                        'price': '',
+                        'line_sheet_id': line_sheet_id
+                    }
+                    collection_products.append(product)
+                    
+                    # Update the database with the existing image - USING THE EXISTING CONNECTION
+                    # Don't create a new connection here to avoid database locks
+                    conn.execute(
+                        "INSERT OR REPLACE INTO products (style, image, colors, description, sizes, price, line_sheet_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                        (clean_name, image_url, '', '', '', '', line_sheet_id)
+                    )
+                    
+                    uploaded_count += 1
+                    continue  # Skip to next file
+                
+                # If image doesn't exist, proceed with upload
+                result = cloudinary.uploader.upload(
+                    file,
+                    public_id=public_id,
+                    resource_type="image",
+                    format="webp",
+                    overwrite=True,
+                    invalidate=True
+                )
+                
+                # Get the secure URL
+                image_url = get_cloudinary_url(
+                    public_id,
+                    transformation={
+                        'quality': 'auto',
+                        'fetch_format': 'auto'
+                    }
+                )
+                
+                if not image_url:
+                    raise Exception("Failed to generate Cloudinary URL")
+                
+                # Create a product entry for this collection
+                product = {
+                    'style': clean_name,
+                    'image': image_url,
+                    'colors': '',
+                    'description': '',
+                    'sizes': '',
+                    'price': '',
+                    'line_sheet_id': line_sheet_id  # Associate with the specific line sheet
                 }
-            )
-            
-            if not image_url:
-                raise Exception("Failed to generate Cloudinary URL")
-            
-            # Create a product entry for this collection
-            product = {
-                'style': name_without_ext,
-                'image': image_url,
-                'colors': '',
-                'description': '',
-                'sizes': '',
-                'price': '',
-                'line_sheet_id': line_sheet_id  # Associate with the specific line sheet
-            }
-            collection_products.append(product)
-            
-            # Update the database
-            with sqlite3.connect("products.db") as conn:
+                collection_products.append(product)
+                
+                # Update the database - USING THE EXISTING CONNECTION
+                # Don't create a new connection here either
                 conn.execute(
                     "INSERT OR REPLACE INTO products (style, image, colors, description, sizes, price, line_sheet_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    (name_without_ext, image_url, '', '', '', '', line_sheet_id)
+                    (clean_name, image_url, '', '', '', '', line_sheet_id)
                 )
-            
-            uploaded_count += 1
-            
-        except Exception as e:
-            errors.append(f"Error uploading {filename}: {str(e)}")
-            logging.error(f"Error uploading {filename}: {e}")
-    
-    if uploaded_count == 0 and errors:
-        return jsonify({'success': False, 'error': '; '.join(errors)}), 500
-    
-    return jsonify({
-        'success': True,
-        'uploaded_count': uploaded_count,
-        'line_sheet_url': url_for('view_line_sheet', filename=line_sheet_filename),
-        'errors': errors if errors else None
-    })
+                
+                uploaded_count += 1
+                
+            except Exception as e:
+                errors.append(f"Error uploading {original_filename}: {str(e)}")
+                logging.error(f"Error uploading {original_filename}: {e}")
+        
+        if uploaded_count == 0 and errors:
+            return jsonify({'success': False, 'error': '; '.join(errors)}), 500
+        
+        # Get final count after all uploads
+        final_count = count_uploaded_images()
+        collection_count = count_collection_images(collection_name)
+        
+        return jsonify({
+            'success': True,
+            'uploaded_count': uploaded_count,
+            'total_count': final_count,
+            'collection_count': collection_count,
+            'line_sheet_url': url_for('view_line_sheet', filename=line_sheet_filename),
+            'errors': errors if errors else None
+        })
 
 @app.route('/upload-excel', methods=['POST'])
 def upload_excel():
@@ -382,15 +552,15 @@ def upload_excel():
     
     excel_file = request.files['excel']
     album_price_list = request.files['album_price_list']
-    
     if excel_file.filename == '' or album_price_list.filename == '':
         return jsonify({'success': False, 'error': 'No selected files'}), 400
     
-    # Check file types
-    if not excel_file.filename.lower().endswith(('.xlsx', '.xls')) or not album_price_list.filename.lower().endswith('.pdf'):
+    # Check file types - added .xlsm support
+    if not excel_file.filename.lower().endswith(('.xlsx', '.xls', '.xlsm')) or not album_price_list.filename.lower().endswith('.pdf'):
         return jsonify({'success': False, 'error': 'Invalid file formats'}), 400
     
     title = request.form.get('title', '').strip().upper()  # Convert title to uppercase
+    collection_name = request.form.get('collection_name', '').strip()
     
     if not title:
         # Generate a title if none was provided
@@ -403,7 +573,7 @@ def upload_excel():
     # Create database connection
     with sqlite3.connect("products.db") as conn:
         cursor = conn.cursor()
-        
+            
         # Create the line sheet first to get its ID
         cursor.execute(
             "INSERT INTO line_sheets (title, filename) VALUES (?, ?)",
@@ -411,11 +581,20 @@ def upload_excel():
         )
         line_sheet_id = cursor.lastrowid
         
-        # Save the PDF
+        # Save the PDF with original filename
         try:
+            # Get original filename for better identification
+            original_filename = secure_filename(album_price_list.filename)
+            filename_without_ext = os.path.splitext(original_filename)[0]
+            # Clean up the filename - remove spaces and special characters
+            clean_filename = re.sub(r'[^a-zA-Z0-9_-]', '_', filename_without_ext.lower())
+            # Add timestamp to ensure uniqueness
+            timestamp = int(datetime.now().timestamp())
+            pdf_public_id = f"{clean_filename}_{timestamp}.pdf"  # Added .pdf extension
+            
             album_result = cloudinary.uploader.upload(
                 album_price_list,
-                public_id=f"album_price_list",  # No folder structure in the public_id
+                public_id=pdf_public_id,  # Use original filename with timestamp
                 resource_type="raw",  # For non-image files like PDFs
                 overwrite=True,
                 invalidate=True
@@ -463,7 +642,6 @@ def upload_excel():
                 )
             
             return redirect(url_for('view_line_sheet', filename=line_sheet_filename))
-        
         except Exception as e:
             logging.error(f"Error processing Excel file: {e}")
             return jsonify({'success': False, 'error': str(e)}), 500
@@ -472,16 +650,48 @@ def upload_excel():
 def line_sheets():
     # This route should also be accessible without authentication
     title = request.args.get('title', 'MINKAS LINE SHEETS')
+    
+    # Extract collection name from title for image mapping
+    collection_name = title.strip().split()[0] if title and ' ' in title else None
+    
     with sqlite3.connect("products.db") as conn:
         products = conn.execute("SELECT * FROM products").fetchall()
     
     # Convert SQLite row objects to plain lists for JSON serialization
     safe_products = []
     for product in products:
-        # Updated to properly check all required fields except line_sheet_id
-        if all(product[:-1]):  # Check all fields except the last one (line_sheet_id)
+        # Check required fields excluding id and line_sheet_id
+        if all(product[1:7]):
             # Convert product tuple to list
             product_list = list(product)
+            
+            # Get style number and check image URL
+            style_number = product_list[1]
+            image_url = product_list[6]
+            
+            # If image URL is empty or doesn't include a valid Cloudinary path, try to construct it
+            if not image_url or 'cloudinary' not in image_url:
+                # Try to get Cloudinary URL using just the style number without collection prefix
+                try:
+                    clean_style = re.sub(r'(?i)pictures[_-]?', '', style_number)
+                    public_id = clean_style  # Use style number directly
+                    new_url = get_cloudinary_url(
+                        public_id,
+                        transformation={
+                            'quality': 'auto',
+                            'fetch_format': 'auto'
+                        }
+                    )
+                    if new_url:
+                        product_list[6] = new_url
+                        logging.info(f"Updated image URL for {style_number} to {new_url}")
+                        # Update database with new URL
+                        conn.execute(
+                            "UPDATE products SET image = ? WHERE id = ?",
+                            (new_url, product_list[0])
+                        )
+                except Exception as e:
+                    logging.error(f"Error generating Cloudinary URL for {style_number}: {e}")
             safe_products.append(product_list)
     
     # Get the album price list URL
@@ -508,7 +718,7 @@ def view_line_sheet(filename):
         # Get the line sheet information from the database
         with sqlite3.connect("products.db") as conn:
             line_sheet = conn.execute(
-                "SELECT * FROM line_sheets WHERE filename = ?", 
+                "SELECT * FROM line_sheets WHERE filename = ?",
                 (filename,)
             ).fetchone()
             
@@ -522,12 +732,43 @@ def view_line_sheet(filename):
                     (line_sheet_id,)
                 ).fetchall()
                 
+                # Extract collection name from title for image mapping
+                collection_name = title.strip().split()[0] if title and ' ' in title else None
+                
                 # Convert SQLite row objects to plain lists for JSON serialization
                 safe_products = []
                 for product in products:
-                    if all(product[:-1]):  # Check all fields except line_sheet_id
+                    if all(product[1:7]):  # Check required fields excluding id and line_sheet_id
                         # Convert product tuple to list
                         product_list = list(product)
+                        
+                        # Get style number and check image URL
+                        style_number = product_list[1]
+                        image_url = product_list[6]
+                        
+                        # If image URL is empty or doesn't include a valid Cloudinary path, try to construct it
+                        if not image_url or 'cloudinary' not in image_url:
+                            # Try to get Cloudinary URL using just the style number
+                            try:
+                                clean_style = re.sub(r'(?i)pictures[_-]?', '', style_number)
+                                public_id = clean_style  # Use style number directly
+                                new_url = get_cloudinary_url(
+                                    public_id,
+                                    transformation={
+                                        'quality': 'auto',
+                                        'fetch_format': 'auto'
+                                    }
+                                )
+                                if new_url:
+                                    product_list[6] = new_url
+                                    logging.info(f"Updated image URL for {style_number} to {new_url}")
+                                    # Update database with new URL
+                                    conn.execute(
+                                        "UPDATE products SET image = ? WHERE id = ?",
+                                        (new_url, product_list[0])
+                                    )
+                            except Exception as e:
+                                logging.error(f"Error generating Cloudinary URL for {style_number}: {e}")
                         safe_products.append(product_list)
                 
                 # Get the album price list URL
@@ -544,7 +785,6 @@ def view_line_sheet(filename):
                 # If no line sheet found in database, return 404
                 logging.error(f"Line sheet not found in database: {filename}")
                 return "Line sheet not found", 404
-    
     except Exception as e:
         logging.error(f"Error rendering line sheet {filename}: {e}")
         return f"Error rendering line sheet: {str(e)}", 500
@@ -563,10 +803,19 @@ def upload_album_price_list():
         return jsonify({'success': False, 'error': 'Uploaded file must be a PDF'}), 400
     
     try:
-        # Upload to Cloudinary
+        # Get original filename for better identification
+        original_filename = secure_filename(file.filename)
+        filename_without_ext = os.path.splitext(original_filename)[0]
+        # Clean up the filename - remove spaces and special characters
+        clean_filename = re.sub(r'[^a-zA-Z0-9_-]', '_', filename_without_ext.lower())
+        # Add timestamp to ensure uniqueness
+        timestamp = int(datetime.now().timestamp())
+        pdf_public_id = f"{clean_filename}_{timestamp}.pdf"  # Added .pdf extension
+        
+        # Upload to Cloudinary with original filename to prevent overwriting
         result = cloudinary.uploader.upload(
             file,
-            public_id=f"album_price_list",  # No folder structure in the public_id
+            public_id=pdf_public_id,
             resource_type="raw",  # For non-image files like PDFs
             overwrite=True,
             invalidate=True
@@ -582,8 +831,7 @@ def upload_album_price_list():
                 ('album_price_list_url', pdf_url)
             )
         
-        logging.info(f"Album Price List PDF uploaded to Cloudinary: {pdf_url}")
-        
+        logging.info(f"Album Price List PDF uploaded to Cloudinary: {pdf_url} with ID: {pdf_public_id}")
         return jsonify({
             'success': True,
             'url': pdf_url
@@ -597,4 +845,4 @@ def upload_album_price_list():
         }), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5005)
+    app.run(debug=True, port=5000)

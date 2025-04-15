@@ -8,12 +8,17 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
   }
   
   .main-container {
     flex: 1;
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    height: calc(100vh - 80px); /* Adjust based on your header height */
+    max-height: 900px;
+    overflow: hidden;
   }
   
   .section-card {
@@ -168,6 +173,29 @@
     border-radius: 0.75rem;
     overflow: hidden;
   }
+  
+  .progress-container {
+    width: 100%;
+    background-color: #e2e8f0;
+    border-radius: 9999px;
+    height: 0.5rem;
+    overflow: hidden;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    display: none;
+  }
+  
+  .dark .progress-container {
+    background-color: rgba(30, 41, 59, 0.5);
+  }
+  
+  .progress-bar {
+    height: 100%;
+    background-image: linear-gradient(to right, #6366f1, #8b5cf6);
+    border-radius: 9999px;
+    width: 0%;
+    transition: width 0.3s ease;
+  }
 </style>
 {% endblock %}
 
@@ -184,7 +212,7 @@
 {% block container_classes %}max-w-7xl mx-auto main-container{% endblock %}
 
 {% block content %}
-<div class="gradient-border mb-4">
+<div class="gradient-border">
   <div class="p-6 rounded-xl" style="background-color: var(--color-bg-secondary);">
     <div class="text-center mb-4">
       <h2 class="text-3xl font-bold mb-1" style="color: var(--color-text-primary);">Create Line Sheet</h2>
@@ -209,18 +237,9 @@
           <!-- Line Sheet Title -->
           <div class="form-group">
             <label for="title" class="form-label">Line Sheet Title <span class="required">*</span></label>
-            <input type="text" name="title" id="title" placeholder="Enter Line Sheet Title" required 
+            <input type="text" name="title" id="title" placeholder="Enter Line Sheet Title (e.g., FW25 COLLECTION)" required 
                   class="form-control">
             <p class="form-text">This will be displayed as the heading of your line sheet</p>
-          </div>
-          
-          <!-- Excel File -->
-          <div class="form-group">
-            <label for="excelFile" class="form-label">Excel File <span class="required">*</span></label>
-            <div class="file-input-container indigo-container">
-              <input type="file" name="excel" id="excelFile" accept=".xlsx,.xls" required>
-            </div>
-            <p class="form-text">Upload Excel file with product data (STYLE#, COLOR, DESCRIPTION, SIZES, PRICE)</p>
           </div>
           
           <!-- Album Price List -->
@@ -231,9 +250,18 @@
             </div>
             <p class="form-text">Upload the PDF file containing the album price list</p>
           </div>
+          
+          <!-- Excel File -->
+          <div class="form-group">
+            <label for="excelFile" class="form-label">Excel File <span class="required">*</span></label>
+            <div class="file-input-container indigo-container">
+              <input type="file" name="excel" id="excelFile" accept=".xlsx,.xls,.xlsm" required>
+            </div>
+            <p class="form-text">Upload Excel file with product data (STYLE#, COLOR, DESCRIPTION, SIZES, PRICE)</p>
+          </div>
         </div>
         
-        <!-- Optional Section - Right Column -->
+        <!-- Optional Image Upload Section - Right Column -->
         <div class="section-card">
           <div class="section-header">
             <div class="section-icon bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-300">
@@ -241,124 +269,213 @@
                 <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
               </svg>
             </div>
-            <h3 class="text-lg font-semibold" style="color: var(--color-text-primary);">Optional Image Collection</h3>
+            <h3 class="text-lg font-semibold" style="color: var(--color-text-primary);">Optional Image Upload</h3>
           </div>
           
-          <!-- Collection Name -->
+          <!-- Collection Name (moved from required section) -->
           <div class="form-group">
             <label for="collectionName" class="form-label">Collection Name</label>
             <input type="text" name="collection_name" id="collectionName" placeholder="Enter Collection Name (e.g., FW25)" 
                   class="form-control">
-            <p class="form-text">Name of the image collection for organizing in Cloudinary</p>
+            <p class="form-text">Name of the collection for organizing images (e.g., Spring24, FW25)</p>
           </div>
           
-          <!-- Image Directory -->
+          <!-- Collection Images -->
           <div class="form-group">
-            <label for="imageDirectory" class="form-label">Image Directory</label>
+            <label for="collectionImages" class="form-label">Collection Images</label>
             <div class="file-input-container purple-container">
-              <input type="file" name="images" id="imageDirectory" webkitdirectory directory multiple 
-                    accept="image/*">
+              <input type="file" name="images" id="collectionImages" accept="image/*" multiple>
             </div>
-            <p class="form-text">Select a folder containing product images</p>
+            <p class="form-text">Upload multiple images at once for this collection</p>
           </div>
           
+          <!-- Status Area -->
+          <div id="uploadStatus" class="mt-4 text-sm text-center text-indigo-600 dark:text-indigo-300"></div>
         </div>
       </div>
       
-      <!-- Submit Button -->
+      <!-- Progress Bar -->
+      <div class="progress-container" id="progressContainer">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      
+      <!-- Submit Button Centered -->
       <div class="mt-6 flex justify-center">
         <button type="submit" id="submitBtn" class="btn-primary">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
           </svg>
           Generate Line Sheet
         </button>
       </div>
-      
-      <!-- Progress Indicator -->
-      <div id="uploadProgress" class="hidden mt-4">
-        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-2">
-          <div id="progressBar" class="bg-indigo-600 h-2.5 rounded-full" style="width: 0%"></div>
-        </div>
-        <p id="uploadStatus" class="text-center text-sm" style="color: var(--color-text-secondary);">Preparing upload...</p>
-      </div>
     </form>
-    
-    <div class="alert-info mt-6">
-      <p class="text-xs" style="color: var(--color-text-secondary);">
-        <strong>Note:</strong> Make sure your Excel file contains the required columns. If you upload images, they will be matched to products based on style numbers.
-      </p>
-    </div>
   </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('lineSheetForm');
-    const progressDiv = document.getElementById('uploadProgress');
-    const progressBar = document.getElementById('progressBar');
-    const statusText = document.getElementById('uploadStatus');
     const submitBtn = document.getElementById('submitBtn');
+    const statusDiv = document.getElementById('uploadStatus');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
     
-    // Update file input labels
+    // Setup for the file input labels
     const fileInputs = document.querySelectorAll('input[type="file"]');
     fileInputs.forEach(input => {
-        const container = input.parentElement;
-        
-        // Set initial text
-        if (input.id === 'excelFile') {
-            container.setAttribute('data-text', 'Choose Excel');
-        } else if (input.id === 'albumPriceList') {
-            container.setAttribute('data-text', 'Choose PDF');
-        } else if (input.id === 'imageDirectory') {
-            container.setAttribute('data-text', 'Choose Folder');
-        }
-        
-        // Update text when selection changes
-        input.addEventListener('change', function(e) {
-            if (this.files.length > 0) {
-                if (this.id === 'imageDirectory') {
-                    container.setAttribute('data-text', `${this.files.length} files`);
-                } else {
-                    container.setAttribute('data-text', this.files[0].name);
-                }
-            } else {
-                let defaultText = 'Choose File';
-                if (this.id === 'excelFile') defaultText = 'Choose Excel';
-                else if (this.id === 'albumPriceList') defaultText = 'Choose PDF';
-                else if (this.id === 'imageDirectory') defaultText = 'Choose Folder';
-                
-                container.setAttribute('data-text', defaultText);
-            }
-        });
+      const container = input.closest('.file-input-container');
+      let defaultText = 'Choose File';
+      
+      if (input.id === 'excelFile') defaultText = 'Choose Excel';
+      else if (input.id === 'albumPriceList') defaultText = 'Choose PDF';
+      else if (input.id === 'collectionImages') defaultText = 'Choose Images';
+      
+      container.setAttribute('data-text', defaultText);
+      
+      // Update text when selection changes
+      input.addEventListener('change', function(e) {
+          if (this.files.length > 0) {
+             if (this.id === 'collectionImages') {
+                 container.setAttribute('data-text', `${this.files.length} images`);
+              } else {
+                  container.setAttribute('data-text', this.files[0].name);
+              }
+          } else {
+              let defaultText = 'Choose File';
+              if (this.id === 'excelFile') defaultText = 'Choose Excel';
+              else if (input.id === 'albumPriceList') defaultText = 'Choose PDF';
+              else if (this.id === 'collectionImages') defaultText = 'Choose Images';
+              
+              container.setAttribute('data-text', defaultText);
+          }
+      });
     });
     
     // Handle form submission
     form.addEventListener('submit', function(e) {
-        console.log("Form submitted");
+      e.preventDefault();
+      
+      const formData = new FormData(this);
+      const collectionName = document.getElementById('collectionName').value.trim();
+      const title = document.getElementById('title').value.trim();
+      const collectionImages = document.getElementById('collectionImages');
+      const excelFile = document.getElementById('excelFile');
+      const albumPriceList = document.getElementById('albumPriceList');
+      
+      // Validate required inputs
+      if (!title) {
+        alert('Please enter a line sheet title.');
+        return;
+      }
+      
+      if (!excelFile.files.length) {
+        alert('Please select an Excel file.');
+        return;
+      }
+      
+      if (!albumPriceList.files.length) {
+        alert('Please select a PDF price list.');
+        return;
+      }
+      
+      // Check if collection images are uploaded without a collection name
+      if (collectionImages.files.length > 0 && !collectionName) {
+        alert('Please enter a collection name for the uploaded images.');
+        return;
+      }
+      
+      // Show progress
+      progressContainer.style.display = 'block';
+      progressBar.style.width = '10%';
+      statusDiv.textContent = 'Starting upload...';
+      submitBtn.disabled = true;
+      
+      // Handle image uploads first, then proceed with line sheet generation
+      const hasImages = collectionImages.files.length > 0 && collectionName;
+      
+      if (hasImages) {
+        // Collection images upload if available
+        const multipleImagesData = new FormData();
+        multipleImagesData.append('collection_name', collectionName);
+        multipleImagesData.append('title', title);
         
-        // Check if there are images selected and collection name provided
-        const imagesInput = document.getElementById('imageDirectory');
-        const collectionName = document.getElementById('collectionName').value.trim();
-        
-        if (imagesInput.files.length > 0 && collectionName) {
-            console.log("Using directory upload");
-            // Change form action to directory upload endpoint
-            form.action = '/upload-directory';
-        } else {
-            // Make sure we're using the excel upload endpoint
-            console.log("Using excel upload");
-            form.action = '/upload-excel';
+        for (let i = 0; i < collectionImages.files.length; i++) {
+          multipleImagesData.append('images', collectionImages.files[i]);
         }
         
-        // Show progress indicators
-        progressDiv.classList.remove('hidden');
-        statusText.textContent = 'Processing submission...';
-        progressBar.style.width = '50%';
+        // Update progress for image uploads
+        statusDiv.textContent = 'Uploading images to Cloudinary...';
+        progressBar.style.width = '30%';
         
-        // Allow form to submit normally
-        return true;
+        fetch('/upload-directory', {
+          method: 'POST',
+          body: multipleImagesData
+        })
+        .then(response => {
+          if (!response.ok) throw new Error('Multiple images upload failed');
+          return response.json();
+        })
+        .then(data => {
+          statusDiv.textContent = 'Images uploaded successfully. Generating line sheet...';
+          progressBar.style.width = '60%';
+          
+          // Now submit the form for line sheet generation
+          submitForm();
+        })
+        .catch(error => {
+          console.error('Error during image uploads:', error);
+          statusDiv.textContent = 'Error uploading images. Please try again.';
+          progressBar.style.width = '0%';
+          submitBtn.disabled = false;
+        });
+      } else {
+        // No images to upload, directly proceed with line sheet generation
+        submitForm();
+      }
+      
+      function submitForm() {
+        statusDiv.textContent = 'Generating line sheet...';
+        progressBar.style.width = '80%';
+        
+        // Set the form action to the correct endpoint
+        form.action = '/upload-excel';
+        
+        // Simulate form submission
+        const xhr = new XMLHttpRequest();
+        xhr.open(form.method, form.action, true);
+        
+        xhr.upload.onprogress = function(e) {
+          if (e.lengthComputable) {
+            const percent = Math.min(95, 80 + (e.loaded / e.total) * 15);
+            progressBar.style.width = percent + '%';
+          }
+        };
+        
+        xhr.onload = function() {
+          if (xhr.status >= 200 && xhr.status < 400) {
+            // Success
+            progressBar.style.width = '100%';
+            statusDiv.textContent = 'Line sheet generated successfully!';
+            setTimeout(() => {
+              window.location.href = '/list_line_sheets';
+            }, 1000);
+          } else {
+            // Error
+            statusDiv.textContent = 'Error generating line sheet. Please try again.';
+            progressBar.style.width = '0%';
+            submitBtn.disabled = false;
+          }
+        };
+        
+        xhr.onerror = function() {
+          statusDiv.textContent = 'Network error. Please try again.';
+          progressBar.style.width = '0%';
+          submitBtn.disabled = false;
+        };
+        
+        xhr.send(formData);
+      }
     });
-});
+  });
 </script>
 {% endblock %}

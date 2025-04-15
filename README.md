@@ -1,5 +1,17 @@
-# Line-Sheet-Manager
-Line Sheet Manager for creating ATS (Available to Sell) stocks catalogue 
+# Line Sheet Manager
+
+A web application to manage line sheets for fashion collections with Cloudinary image storage.
+
+## Recent Changes
+
+### Updates (Current Date)
+
+- **Cloudinary Upload Optimization**: Added check to skip uploading images that already exist in Cloudinary to prevent duplicate uploads
+- **PDF Handling Improvement**: Fixed album price list PDF handling to preserve original filenames and correctly include .pdf extension
+- **Bug Fixes**: 
+  - Fixed syntax errors in Python code (list comprehension issues)
+  - Fixed issue where album price lists were overwriting each other
+  - Improved error handling and logging for image and PDF uploads
 
 ## Changelog
 
@@ -56,6 +68,13 @@ Line Sheet Manager for creating ATS (Available to Sell) stocks catalogue
   - Implemented product management system
 
 ### Features
+
+- Upload and manage product images
+- Generate line sheets from Excel data
+- Upload image directories in bulk
+- Store album price lists as PDFs
+- View and share line sheets
+
 - User authentication system
 - Excel file processing for product data
 - Image upload and management (.webp format)
@@ -63,6 +82,10 @@ Line Sheet Manager for creating ATS (Available to Sell) stocks catalogue
 - Responsive web interface
 - SQLite database for data persistence
 - Automatic seed data loading for initial setup
+
+## Setup & Usage
+
+[Include setup and usage instructions here]
 
 ### Tech Stack
 - Python Flask for backend

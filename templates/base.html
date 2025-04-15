@@ -45,7 +45,7 @@
     
     <style>
         :root {
-            --color-bg-primary: #f9fafb;
+            --color-bg-primary: #f5f5f5;
             --color-bg-secondary: #ffffff;
             --color-text-primary: rgb(31, 41, 55);
             --color-text-secondary: rgb(75, 85, 99);
@@ -148,7 +148,7 @@
         /* Dark mode toggle switch */
         .theme-toggle {
             position: fixed;
-            bottom: 20px;
+            top: 20px;
             right: 20px;
             z-index: 9999;
         }
@@ -165,6 +165,8 @@
             cursor: pointer;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
             transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
         
         .theme-toggle-btn:hover {
@@ -184,7 +186,7 @@
     </div>
     
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
-        <div class="{% block container_classes %}gradient-border p-6 rounded-xl shadow-sm{% endblock %}" style="background-color: var(--color-bg-secondary);">
+        <div class="{% block container_classes %}gradient-border p-6 rounded-xl shadow-sm{% endblock %}">
             {% block header %}
             <div class="flex justify-between items-center mb-6">
                 <h1 class="text-2xl md:text-3xl font-bold" style="color: var(--color-text-primary);">{% block header_title %}Line Sheet Manager{% endblock %}</h1>

@@ -2,7 +2,7 @@
 
 {% block title %}Login - Line Sheet Manager{% endblock %}
 
-{% block container_classes %}max-w-md mx-auto gradient-border p-0 rounded-xl shadow-sm{% endblock %}
+{% block container_classes %}h-screen flex items-center justify-center{% endblock %}
 
 {% block header %}{% endblock %}
 
@@ -12,52 +12,104 @@
     position: relative;
     z-index: 5;
   }
+
+  .form-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--color-input-border);
+    border-radius: 8px;
+    font-size: 16px;
+    position: relative;
+    z-index: 1;
+    background-color: var(--color-input-bg);
+    color: var(--color-text-primary);
+    transition: all 0.3s ease;
+  }
+
+  .form-input:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  }
+
+  .btn-primary {
+    background-image: linear-gradient(to right, #6366f1, #8b5cf6);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    z-index: 10;
+    transition: all 0.3s ease;
+    min-width: 150px;
+    justify-content: center;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .form-label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: var(--color-text-secondary);
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="p-8">
-    <div class="text-center mb-8">
-        <h2 class="text-2xl font-bold" style="color: var(--color-text-primary);">Welcome Back</h2>
-        <p style="color: var(--color-text-secondary);" class="mt-2">Sign in to manage your line sheets</p>
+<div class="max-w-md w-full mx-auto gradient-border p-0 rounded-xl shadow-sm">
+    <div class="p-8">
+        <div class="text-center mb-8">
+            <h2 class="text-2xl font-bold" style="color: var(--color-text-primary);">Welcome Back</h2>
+            <p style="color: var(--color-text-secondary);" class="mt-2">Sign in to manage your line sheets</p>
+        </div>
+        
+        <form action="/login" method="post" class="space-y-6 relative z-10">
+            <div>
+                <label for="username" class="form-label">Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter your username" required 
+                       class="form-input">
+            </div>
+            
+            <div>
+                <label for="password" class="form-label">Password</label>
+                <input type="password" id="password" name="password" placeholder="••••••••" required 
+                       class="form-input">
+            </div>
+            
+            <div class="flex justify-center">
+                <button type="submit" class="btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                    </svg>
+                    Sign In
+                </button>
+            </div>
+        </form>
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="mt-6 p-4 rounded-lg dark:bg-red-900/30 dark:border-red-800 bg-red-50 border border-red-100 relative z-10">
+                    {% for message in messages %}
+                        <div class="flex items-center gap-2 text-red-500 dark:text-red-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
     </div>
-    
-    <form action="/login" method="post" class="space-y-6 relative z-10">
-        <div>
-            <label for="username" class="form-label">Username</label>
-            <input type="text" id="username" name="username" placeholder="Enter your username" required 
-                   class="form-input">
-        </div>
-        
-        <div>
-            <label for="password" class="form-label">Password</label>
-            <input type="password" id="password" name="password" placeholder="••••••••" required 
-                   class="form-input">
-        </div>
-        
-        <button type="submit" class="form-btn bg-gradient-to-r from-indigo-600 to-purple-600 text-white w-full shadow-sm hover:shadow">
-            <div class="flex items-center justify-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
-                </svg>
-                Sign In
-            </div>
-        </button>
-    </form>
-    
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <div class="mt-6 p-4 rounded-lg dark:bg-red-900/30 dark:border-red-800 bg-red-50 border border-red-100 relative z-10">
-                {% for message in messages %}
-                    <div class="flex items-center gap-2 text-red-500 dark:text-red-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                        </svg>
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
 </div>
 {% endblock %}

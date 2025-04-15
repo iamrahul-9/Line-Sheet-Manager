@@ -21,6 +21,25 @@
         --text-color: #374151;
         --light-gray: #f8f9fa;
         --border-color: #e5e7eb;
+        --color-bg-primary: #fff;
+        --color-bg-secondary: #ffffff;
+        --color-text-primary: #000;
+        --color-text-secondary: #374151;
+        --shadow-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .dark {
+        --primary-color: #6366f1;
+        --secondary-color: #818cf8;
+        --accent-color: #a78bfa;
+        --text-color: #f3f4f6;
+        --light-gray: #1e1e1e;
+        --border-color: #374151;
+        --color-bg-primary: #121212;
+        --color-bg-secondary: #1e1e1e;
+        --color-text-primary: #f3f4f6;
+        --color-text-secondary: #9ca3af;
+        --shadow-color: rgba(0, 0, 0, 0.5);
     }
 
     body {
@@ -28,7 +47,7 @@
         padding: 0;
         font-family: 'Poppins', sans-serif;
         color: var(--text-color);
-        background-color: var(--light-gray);
+        background-color: var(--color-bg-primary);
     }
 
     .product-grid {
@@ -40,25 +59,26 @@
     }
 
     .product-card {
-        background: white;
+        background: var(--color-bg-secondary);
         border-radius: 12px;
         overflow: hidden;
         transition: transform 0.3s ease, box-shadow 0.3s ease;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 10px var(--shadow-color);
         display: flex;
         flex-direction: column;
     }
 
     .product-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 5px 20px var(--shadow-color);
     }
 
     .image-container {
         position: relative;
         padding-top: 120% !important;
         overflow: hidden;
-        background-color: var(--light-gray);
+        background-color: var(--color-bg-secondary);  /* Match with card background */
+        border-bottom: none;  /* Remove any potential border */
     }
 
     .image-container img {
@@ -67,10 +87,9 @@
         left: 0;
         width: 100%;
         height: 100%;
-        object-fit: contain;
+        object-fit: inherit;
         transition: transform 0.5s ease;
-        loading: lazy;
-        background-color: white;
+        background-color: var(--color-bg-secondary);  /* Match with card background */
     }
 
     .image-container img.error {
@@ -89,20 +108,25 @@
     }
 
     .image-container:hover img {
-        transform: scale(1.05); /* Restored original scale effect */
+        transform: scale(1.05);
     }
 
     .product-info {
-        padding: 0.5rem;
+        padding: 1rem;
         flex-grow: 1;
         display: flex;
         flex-direction: column;
+        background-color: var(--color-bg-secondary);
+    }
+
+    .dark .product-info {
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .style-number {
         font-size: 1.25rem;
         font-weight: 600;
-        color: #000000;
+        color: var(--color-text-primary);
         margin-bottom: 0.5rem;
     }
 
@@ -120,14 +144,9 @@
         align-items: center;
     }
 
-    /* Specific override for sizes row */
-    .product-details .detail-row:has(.fa-ruler) {
-        gap: 0;
-    }
-
     .detail-label {
         font-weight: 500;
-        color: #000000;
+        color: var(--color-text-primary);
         display: flex;
         align-items: center;
         gap: 0.35rem;
@@ -137,17 +156,17 @@
         font-size: 1rem;
         width: 16px;
         text-align: center;
-        color: #4f46e5;
+        color: var(--primary-color);
     }
 
     .detail-value {
-        color: var(--text-color);
+        color: var(--color-text-secondary);
     }
 
     .price {
         font-size: 1.2rem;
         font-weight: 600;
-        color: var(--accent-color);
+        color: var(--color-text-primary);
         margin-top: 1rem;
         display: flex;
         align-items: center;
@@ -156,13 +175,78 @@
 
     .price i {
         font-size: 1.1rem;
-        color: var(--accent-color);
+        color: var(--color-text-primary);
     }
 
-    .icon {
-        width: 16px;
-        height: 16px;
-        display: inline-block;
+    .header-title {
+        color: var(--color-text-primary);
+        text-align: center;
+        margin: 0 auto;
+        font-size: 2rem;
+        font-weight: 600;
+    }
+
+    .gallery-note {
+        color: var(--color-text-secondary);
+        text-align: center;
+        margin-bottom: 2rem;
+        font-size: 0.9rem;
+        background-color: var(--color-bg-secondary);
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px var(--shadow-color);
+    }
+
+    .size-details {
+        color: var(--color-text-primary);
+        margin-top: 4px;
+    }
+    
+    .sizes-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+        text-align: center;
+        margin-bottom: 6px;
+    }
+    
+    .size-label {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--color-text-primary);
+    }
+    
+    .size-value {
+        font-size: 0.95rem;
+        color: var(--color-text-secondary);
+    }
+    
+    .size-total {
+        margin-top: 6px;
+        text-align: right;
+        font-weight: 500;
+        color: var(--color-text-primary);
+        font-size: 0.9rem;
+    }
+
+    .album-price {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-image: linear-gradient(to right, var(--primary-color), var(--accent-color));
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        box-shadow: 0 4px 12px var(--shadow-color);
+        z-index: 1100;
+        cursor: pointer;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .album-price:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px var(--shadow-color);
     }
 
     /* PhotoSwipe Customization - White minimal glass design */
@@ -176,7 +260,7 @@
 
     /* Consistent UI elements with glass effect */
     .pswp__top-bar {
-        background: rgba(255, 255, 255, 0.5) !important; /* white with 50% opacity */
+        background: rgba(255, 255, 255, 0.5) !important;
         width: 70%;
         max-width: 800px;
         height: 50px;
@@ -189,6 +273,13 @@
         top: 20px;
         position: absolute;
         border-radius: 12px;
+        backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
     }
@@ -268,7 +359,7 @@
     /* Navigation arrows - fixed to avoid duplication */
     .pswp__button--arrow--left,
     .pswp__button--arrow--right {
-        background: rgba(255, 255, 255, 0.5) !important; /* white with 50% opacity */
+        background: rgba(255, 255, 255, 0.5) !important;
         width: 40px;
         height: 40px;
         border-radius: 50%;
@@ -287,7 +378,7 @@
     .pswp__button--arrow--right {
         right: 20px;
     }
-    
+
     .pswp__button--arrow--left:hover,
     .pswp__button--arrow--right:hover {
         transform: scale(1.1);
@@ -320,7 +411,7 @@
 
     /* Consistent caption bar with glass effect */
     .pswp__caption {
-        background: rgba(255, 255, 255, 0.5) !important; /* white with 50% opacity */
+        background: rgba(255, 255, 255, 0.5) !important;
         height: 50px;
         position: absolute;
         left: 50%;
@@ -352,196 +443,13 @@
     .pswp__img {
         max-height: calc(100vh - 180px);
         object-fit: contain;
-        margin-top: 45px; /* Add margin to prevent overlap with top bar */
+        margin-top: 45px;
     }
 
     /* Hide default button backgrounds */
     .pswp__button--arrow--left:after,
     .pswp__button--arrow--right:after {
         display: none !important;
-    }
-
-    /* Print Styles */
-    @media print {
-        .product-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-        }
-
-        .product-card {
-            break-inside: avoid;
-            page-break-inside: avoid;
-            box-shadow: none !important;
-        }
-
-        .product-card:hover {
-            transform: none !important;
-            box-shadow: none !important;
-        }
-
-        .image-container img {
-            print-color-adjust: exact;
-            -webkit-print-color-adjust: exact;
-        }
-
-        .album-price {
-            display: none;
-        }
-    }
-
-    /* Responsive Design */
-    @media (max-width: 1200px) {
-        .product-grid {
-            grid-template-columns: repeat(3, minmax(220px, 1fr));
-        }
-    }
-
-    @media (max-width: 900px) {
-        .product-grid {
-            grid-template-columns: repeat(2, minmax(220px, 1fr));
-        }
-    }
-
-    @media (max-width: 600px) {
-        .product-grid {
-            grid-template-columns: repeat(1, minmax(220px, 1fr));
-        }
-    }
-
-    /* PDF View Styles */
-    .pdf-view .product-card {
-        box-shadow: none !important;
-        border: 1px solid var(--border-color);
-    }
-
-    .pdf-view .product-card:hover {
-        transform: none !important;
-    }
-
-    /* Album Price Button */
-    .album-price {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background-image: linear-gradient(to right, #6366f1, #8b5cf6);
-        color: white;
-        padding: 12px 24px;
-        border-radius: 8px;
-        font-weight: 600;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        z-index: 1100;
-        cursor: pointer;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .album-price:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-    }
-
-    /* Fix scroll-wrap */
-    .pswp__scroll-wrap {
-        overflow: visible !important;
-    }
-
-    /* Remove padding that was pushing the image down */
-    .pswp__container {
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
-    }
-
-    /* Add header title centering */
-    .header-title {
-        text-align: center;
-        margin: 0 auto;
-        font-size: 2rem;
-        font-weight: 600;
-        color: #000000;
-        width: 100%;
-        display: block;
-    }
-
-    .gallery-note {
-        text-align: center;
-        border-radius: 8px;
-        font-size: 0.9rem;
-        color: var(--secondary-color);
-    }
-
-    .gallery-note p {
-        margin: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 1rem;
-    }
-
-    .detail-row.size-row {
-        gap: 0;
-    }
-
-    .size-details {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-    }
-
-    .size-details .detail-row {
-        display: grid;
-        grid-template-columns: 100px 1fr;
-        gap: 0;
-        align-items: start;
-    }
-
-    .size-details .detail-label {
-        font-weight: 500;
-        color: #000000;
-        display: flex;
-        align-items: flex-start;
-        gap: 0.35rem;
-    }
-
-    .size-details .detail-label i {
-        font-size: 1rem;
-        width: 16px;
-        text-align: left;
-        color: #4f46e5;
-    }
-
-    .size-details .sizes-row {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.4rem;
-        flex-wrap: nowrap;
-        width: 100%;
-    }
-
-    .size-details .size-ratio {
-        display: inline-flex;
-        align-items: flex-start;
-        gap: 0.12rem;
-        white-space: nowrap;
-    }
-
-    .size-details .size-ratio .size {
-        font-weight: 600;
-        color: #000000;
-    }
-
-    .size-details .size-ratio .quantity {
-        color: #000000;
-    }
-
-    .size-details .size-total {
-        font-weight: 600;
-        color: #000000;
-        font-size: 0.9rem;
-        margin-top: 0.25rem;
-        text-align: left;
-    }
-
-    .detail-row.sizes-detail {
-        gap: 0 !important;
     }
 
     /* Responsive styles for PhotoSwipe */
@@ -591,6 +499,36 @@
             -webkit-backdrop-filter: blur(10px);
         }
     }
+
+    /* Fix scroll-wrap */
+    .pswp__scroll-wrap {
+        overflow: visible !important;
+    }
+
+    /* Remove padding that was pushing the image down */
+    .pswp__container {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1200px) {
+        .product-grid {
+            grid-template-columns: repeat(3, minmax(220px, 1fr));
+        }
+    }
+
+    @media (max-width: 900px) {
+        .product-grid {
+            grid-template-columns: repeat(2, minmax(220px, 1fr));
+        }
+    }
+
+    @media (max-width: 600px) {
+        .product-grid {
+            grid-template-columns: repeat(1, minmax(220px, 1fr));
+        }
+    }
 </style>
 {% endblock %}
 
@@ -608,10 +546,10 @@
             <img src="{{ product[6] }}" 
                  alt="Style {{ product[1] }}"
                  loading="lazy"
-                 data-fallback="{{ url_for('static', filename='images/placeholder.webp') }}">
+                 data-fallback="https://placehold.co/400">
         </a>
         <div class="product-info">
-            <div class="style-number">Style #{{ product[1] }}</div>
+            <div class="style-number">Style # {{ product[1] }}</div>
             <div class="product-details">
                 <div class="detail-row">
                     <span class="detail-label">
@@ -636,7 +574,7 @@
                 </div>
                 <div class="price">
                     <i class="fas fa-dollar-sign"></i>
-                    {{ product[5] }}
+                    {{ "%.2f"|format(product[5]|float) if product[5] and product[5]|string|trim is not none else "Not Available" }}
                 </div>
             </div>
         </div>
@@ -644,7 +582,7 @@
     {% endfor %}
 </div>
 
-<a href="{{ album_price_list_url if album_price_list_url else url_for('static', filename='FW25 ALBUM PRICE LIST.pdf') }}" class="album-price" target="_blank">Album Price List</a>
+<a href="{{ album_price_list_url }}" class="album-price" target="_blank">Album Price List</a>
 
 <!-- PhotoSwipe Template -->
 <div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
@@ -688,6 +626,8 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Remove all the album price list handling code since we're using a direct link now
+        
         // Error handling for images
         document.querySelectorAll('img[data-fallback]').forEach(img => {
             img.onerror = function() {
@@ -733,27 +673,37 @@
             }
         }
 
-        // Update size displays
+        // Update size displays with tabular format
         document.querySelectorAll('.detail-value[data-size]').forEach(element => {
             const sizeString = element.getAttribute('data-size');
             const result = parseSizeRatios(sizeString);
             
             if (result.isRatio) {
-                const ratiosHtml = result.ratios.map(ratio => `
-                    <span class="size-ratio">
-                        <span class="size">${ratio.size}:</span>
-                        <span class="quantity">${ratio.quantity}</span>
-                    </span>
-                `).join('');
-
-                element.innerHTML = `
+                const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
+                
+                // Create a tabular display with labels on top
+                let sizesHTML = `
                     <div class="size-details">
-                        <div class="sizes-row">
-                            ${ratiosHtml}
+                        <div class="sizes-grid">
+                `;
+                
+                // Add size labels (S, M, L, XL, XXL)
+                sizes.forEach(size => {
+                    sizesHTML += `<div class="size-label">${size}</div>`;
+                });
+                
+                // Add size values (quantities)
+                result.ratios.forEach(ratio => {
+                    sizesHTML += `<div class="size-value">${ratio.quantity}</div>`;
+                });
+                
+                sizesHTML += `
                         </div>
                         <div class="size-total">Total: ${result.total}</div>
                     </div>
                 `;
+                
+                element.innerHTML = sizesHTML;
             } else {
                 // Display the regular size string as is
                 element.textContent = result.sizeString;
@@ -793,7 +743,9 @@
                         src: linkEl.getAttribute('href'),
                         w: parseInt(size[0], 10),
                         h: parseInt(size[1], 10),
-                        title: linkEl.getAttribute('data-caption')
+                        title: linkEl.getAttribute('data-caption').replace(/\$(\d+(\.\d+)?)/, function(match, price) {
+                            return '$ ' + parseFloat(price).toFixed(2);
+                        })
                     };
 
                     if(linkEl.querySelector('img')) {
@@ -989,24 +941,76 @@
                     });
                 });
                 
-                // Add download button functionality
+                // Fixed download button functionality that works with Cloudinary
                 gallery.listen('afterChange', function() {
                     const downloadButton = document.querySelector('.pswp__button--download');
-                    if (downloadButton && gallery.currItem) {
-                        if (!downloadButton.hasAttribute('download-initialized')) {
-                            downloadButton.addEventListener('click', function(e) {
+                    
+                    if (downloadButton) {
+                        // Remove old event listeners
+                        const newDownloadButton = downloadButton.cloneNode(true);
+                        if (downloadButton.parentNode) {
+                            downloadButton.parentNode.replaceChild(newDownloadButton, downloadButton);
+                            
+                            // Add fresh event listener
+                            newDownloadButton.addEventListener('click', function(e) {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 
-                                // Create a temporary link and trigger download
-                                const link = document.createElement('a');
-                                link.href = gallery.currItem.src;
-                                link.download = 'image-' + (gallery.getCurrentIndex() + 1) + '.jpg';
-                                document.body.appendChild(link);
-                                link.click();
-                                document.body.removeChild(link);
+                                if (gallery.currItem && gallery.currItem.src) {
+                                    let imageUrl = gallery.currItem.src;
+                                    
+                                    // For Cloudinary URLs - use direct download
+                                    if (imageUrl.includes('cloudinary.com')) {
+                                        // Convert to fetch format which works better for downloading
+                                        imageUrl = imageUrl.replace(/\/upload\/.*?\/v\d+\//, '/upload/f_jpg/');
+                                        
+                                        // Extract style number for filename
+                                        let filename = 'image.jpg';
+                                        if (gallery.currItem.title) {
+                                            const styleMatch = gallery.currItem.title.match(/Style #:\s*([A-Za-z0-9-]+)/i);
+                                            if (styleMatch && styleMatch[1]) {
+                                                filename = 'Style-' + styleMatch[1] + '.jpg';
+                                            }
+                                        }
+                                        
+                                        // Create an anchor and trigger download
+                                        const a = document.createElement('a');
+                                        a.href = imageUrl;
+                                        a.download = filename;
+                                        a.style.display = 'none';
+                                        document.body.appendChild(a);
+                                        
+                                        // Use fetch API to get the image as a blob
+                                        fetch(imageUrl)
+                                            .then(response => response.blob())
+                                            .then(blob => {
+                                                // Create blob URL and use it for download
+                                                const url = window.URL.createObjectURL(blob);
+                                                a.href = url;
+                                                a.click();
+                                                setTimeout(() => {
+                                                    window.URL.revokeObjectURL(url);
+                                                    document.body.removeChild(a);
+                                                }, 100);
+                                            })
+                                            .catch(err => {
+                                                console.error('Error downloading image:', err);
+                                                // Fallback - try direct download
+                                                window.open(imageUrl, '_blank');
+                                            });
+                                        
+                                        console.log('Download initiated for:', filename);
+                                    } else {
+                                        // For non-Cloudinary URLs - use standard download
+                                        const a = document.createElement('a');
+                                        a.href = imageUrl;
+                                        a.download = 'image.jpg';
+                                        document.body.appendChild(a);
+                                        a.click();
+                                        setTimeout(() => document.body.removeChild(a), 100);
+                                    }
+                                }
                             });
-                            downloadButton.setAttribute('download-initialized', 'true');
                         }
                     }
                 });
