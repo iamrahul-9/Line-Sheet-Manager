@@ -649,7 +649,13 @@ def upload_excel():
 @app.route('/line_sheets')
 def line_sheets():
     # This route should also be accessible without authentication
-    title = request.args.get('title', 'MINKAS LINE SHEETS')
+    #title = request.args.get('title', 'MINKAS LINE SHEETS')
+
+    title = request.args.get('title', '').strip()
+
+    # Redirect specifically for this collection
+    if title.upper() == 'MINKAS FALL/WINTER 2025':
+        return redirect('https://minkas-fw25.onrender.com/view_line_sheet/minkas_fall_winter_2025.html', code=301)
     
     # Extract collection name from title for image mapping
     collection_name = title.strip().split()[0] if title and ' ' in title else None
