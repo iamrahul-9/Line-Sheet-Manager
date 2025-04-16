@@ -639,9 +639,16 @@
         // Parse size ratios
         function parseSizeRatios(sizeString) {
             if (!sizeString) return { isRatio: false, sizeString: "" };
+
+            if sizeString == 'M, L, XL'{
+                return {
+                    isRatio: false,
+                    sizeString
+                };
+            } 
             
             // Check if the string contains commas (size ratio format)
-            if (sizeString.includes(',')) AND sizeString != 'M, L, XL'{
+            if (sizeString.includes(',')) {
                 const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
                 // Split by comma and handle empty values
                 const quantities = sizeString.split(',').map(num => {
