@@ -639,13 +639,6 @@
         // Parse size ratios
         function parseSizeRatios(sizeString) {
             if (!sizeString) return { isRatio: false, sizeString: "" };
-
-            if sizeString == 'M, L, XL'{
-                return {
-                    isRatio: false,
-                    sizeString
-                };
-            } 
             
             // Check if the string contains commas (size ratio format)
             if (sizeString.includes(',')) {
@@ -670,6 +663,11 @@
                     isRatio: true,
                     ratios,
                     total
+                };
+            } elif sizeString == 'M, L, XL'{
+                return {
+                    isRatio: false,
+                    sizeString
                 };
             } else {
                 // Regular size string format
