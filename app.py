@@ -29,11 +29,6 @@ cloudinary.config(
     cdn_subdomain=True  # Enable CDN subdomain
 )
 
-
-# Add seed data configuration
-SEED_DATA_DIR = 'static'  # Changed to use static directory
-DEFAULT_EXCEL = 'FW25 Linesheets Data Final.xlsx'  # Using the actual Excel file name
-
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
 
@@ -64,63 +59,6 @@ def get_cloudinary_url(public_id, transformation=None):
         logging.error(f"Error generating Cloudinary URL: {e}")
         return None
 
-def load_seed_data():
-    """Load initial data from static directory"""
-    try:
-        # Read and process the default Excel file
-        excel_path = os.path.join(SEED_DATA_DIR, DEFAULT_EXCEL)
-        if os.path.exists(excel_path):
-            df = pd.read_excel(excel_path)
-            
-            # Define column mapping
-            column_mapping = {
-                'STYLE#': 'STYLE#',
-                'COLOR': 'COLOR',
-                'DESCRIPTION': 'DESCRIPTION',
-                'SIZES': 'SIZES',
-                'PRICE': 'PRICE'
-            }
-            
-            # Insert data into database
-            with sqlite3.connect("products.db") as conn:
-                # Create a default line sheet for seed data
-                cursor = conn.cursor()
-                cursor.execute(
-                    "INSERT OR IGNORE INTO line_sheets (title, filename) VALUES (?, ?)",
-                    ('DEFAULT SEED DATA', 'default_seed_data.html')
-                )
-                
-                # Get the line sheet ID (either existing or newly created)
-                cursor.execute("SELECT id FROM line_sheets WHERE filename = ?", ('default_seed_data.html',))
-                line_sheet_id = cursor.fetchone()[0]
-                
-                for _, row in df.iterrows():
-                    style = row[column_mapping['STYLE#']]
-                    
-                    # Check if image exists in Cloudinary
-                    try:
-                        image_url = get_cloudinary_url(f"{style}")  # Updated to use new format without folder
-                    except:
-                        image_url = ''
-                    
-                    conn.execute(
-                        "INSERT INTO products (style, colors, description, sizes, price, image, line_sheet_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                        (style, row[column_mapping['COLOR']], row[column_mapping['DESCRIPTION']], 
-                         row[column_mapping['SIZES']], row[column_mapping['PRICE']], image_url, line_sheet_id)
-                    )
-                
-                # Get all products for the line sheet
-                products = conn.execute("SELECT * FROM products").fetchall()
-                
-                # Filter out incomplete entries
-                products = [product for product in products if all(product[:-1])]  # Exclude line_sheet_id from check
-                
-                return products
-                
-    except Exception as e:
-        logging.error(f"Error loading seed data: {e}")
-        return []
-
 def init_db():
     with sqlite3.connect("products.db") as conn:
         conn.execute('''CREATE TABLE IF NOT EXISTS products (
@@ -131,7 +69,8 @@ def init_db():
                         sizes TEXT,
                         price TEXT,
                         image TEXT,
-                        line_sheet_id INTEGER)''')  # Add line_sheet_id to associate products with specific line sheets
+                        line_sheet_id INTEGER,
+                        discount_percent REAL)''')  # Add discount_percent column
         conn.execute('''CREATE TABLE IF NOT EXISTS line_sheets (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         title TEXT,
@@ -142,25 +81,18 @@ def init_db():
                         key TEXT UNIQUE,
                         value TEXT)''')
         
-        # Check if the line_sheet_id column exists in the products table
+        # Check if columns exist in the products table
         cursor = conn.cursor()
         cursor.execute("PRAGMA table_info(products)")
-        columns = [col[1] for col in cursor.fetchall()]  # Fixed missing 'in' keyword
+        columns = [col[1] for col in cursor.fetchall()]
         
         # Add line_sheet_id column if it doesn't exist
         if 'line_sheet_id' not in columns:
             conn.execute("ALTER TABLE products ADD COLUMN line_sheet_id INTEGER")
-        
-        # Check if products table is empty
-        if not conn.execute("SELECT COUNT(*) FROM products").fetchone()[0]:
-            load_seed_data()
             
-        # Set default album price list if not exists
-        if not conn.execute("SELECT value FROM app_settings WHERE key='album_price_list_url'").fetchone():
-            # Default to the static file path directly instead of using url_for
-            default_pdf_path = "/static/FW25 ALBUM PRICE LIST.pdf"
-            conn.execute("INSERT OR IGNORE INTO app_settings (key, value) VALUES (?, ?)", 
-                       ('album_price_list_url', default_pdf_path))
+        # Add discount_percent column if it doesn't exist
+        if 'discount_percent' not in columns:
+            conn.execute("ALTER TABLE products ADD COLUMN discount_percent REAL DEFAULT 0")
 
 with app.app_context():
     # Code that requires the application context
@@ -171,22 +103,6 @@ with app.app_context():
         logging.error(f"Error initializing database: {e}")
         # Continue running the app even if database initialization fails
         # The routes will handle database errors gracefully
-
-def get_album_price_list_url():
-    """Get the current Album Price List URL from the database"""
-    try:
-        with sqlite3.connect("products.db") as conn:
-            result = conn.execute("SELECT value FROM app_settings WHERE key='album_price_list_url'").fetchone()
-            if result:
-                # If the URL starts with /static, convert it to a proper URL
-                if result[0].startswith('/static'):
-                    return url_for('static', filename=result[0].replace('/static/', ''))
-                return result[0]
-    except Exception as e:
-        logging.error(f"Error getting album price list URL: {e}")
-    
-    # Fallback to static file if not found
-    return url_for('static', filename='FW25 ALBUM PRICE LIST.pdf')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -239,9 +155,9 @@ def index():
     with sqlite3.connect("products.db") as conn:
         products = conn.execute("SELECT * FROM products").fetchall()
     
-    # Replace None image values with an empty string or a placeholder
-    products = [(id, style, colors, description, sizes, price, image if image else '') 
-                for id, style, colors, description, sizes, price, image, line_sheet_id in products]
+    # Make sure we include all columns including discount_percent
+    # products = [(id, style, colors, description, sizes, price, image if image else '') 
+    #            for id, style, colors, description, sizes, price, image, line_sheet_id, discount_percent in products]
     
     # Get image upload count
     uploaded_count = count_uploaded_images()
@@ -379,6 +295,17 @@ def upload_directory():
     title = request.form.get('title', '').strip().upper()  # Convert title to uppercase
     collection_name = request.form.get('collection_name', '').strip()
     
+    # Handle global discount if applied
+    apply_global_discount = request.form.get('apply_global_discount') == 'true'
+    global_discount_percent = 0
+    if apply_global_discount:
+        try:
+            global_discount_percent = float(request.form.get('global_discount_percent', 0))
+            logging.info(f"Applying global discount of {global_discount_percent}%")
+        except (ValueError, TypeError):
+            global_discount_percent = 0
+            logging.warning("Invalid discount percentage provided")
+    
     if not title or not collection_name:
         return jsonify({'success': False, 'error': 'Title and Collection Name are required'}), 400
     
@@ -468,15 +395,16 @@ def upload_directory():
                         'description': '',
                         'sizes': '',
                         'price': '',
-                        'line_sheet_id': line_sheet_id
+                        'line_sheet_id': line_sheet_id,
+                        'discount_percent': global_discount_percent if apply_global_discount else 0
                     }
                     collection_products.append(product)
                     
-                    # Update the database with the existing image - USING THE EXISTING CONNECTION
+                    # Update the database - USING THE EXISTING CONNECTION
                     # Don't create a new connection here to avoid database locks
                     conn.execute(
-                        "INSERT OR REPLACE INTO products (style, image, colors, description, sizes, price, line_sheet_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                        (clean_name, image_url, '', '', '', '', line_sheet_id)
+                        "INSERT OR REPLACE INTO products (style, image, colors, description, sizes, price, line_sheet_id, discount_percent) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                        (clean_name, image_url, '', '', '', '', line_sheet_id, global_discount_percent if apply_global_discount else 0)
                     )
                     
                     uploaded_count += 1
@@ -547,20 +475,30 @@ def upload_directory():
 
 @app.route('/upload-excel', methods=['POST'])
 def upload_excel():
-    if 'excel' not in request.files or 'album_price_list' not in request.files:
+    if 'excel' not in request.files:
         return jsonify({'success': False, 'error': 'Missing required files'}), 400
     
     excel_file = request.files['excel']
-    album_price_list = request.files['album_price_list']
-    if excel_file.filename == '' or album_price_list.filename == '':
+    if excel_file.filename == '':
         return jsonify({'success': False, 'error': 'No selected files'}), 400
     
     # Check file types - added .xlsm support
-    if not excel_file.filename.lower().endswith(('.xlsx', '.xls', '.xlsm')) or not album_price_list.filename.lower().endswith('.pdf'):
+    if not excel_file.filename.lower().endswith(('.xlsx', '.xls', '.xlsm')):
         return jsonify({'success': False, 'error': 'Invalid file formats'}), 400
     
     title = request.form.get('title', '').strip().upper()  # Convert title to uppercase
     collection_name = request.form.get('collection_name', '').strip()
+    
+    # Handle global discount if applied
+    apply_global_discount = request.form.get('apply_global_discount') == 'true'
+    global_discount_percent = 0
+    if apply_global_discount:
+        try:
+            global_discount_percent = float(request.form.get('global_discount_percent', 0))
+            logging.info(f"Applying global discount of {global_discount_percent}%")
+        except (ValueError, TypeError):
+            global_discount_percent = 0
+            logging.warning("Invalid discount percentage provided")
     
     if not title:
         # Generate a title if none was provided
@@ -581,36 +519,6 @@ def upload_excel():
         )
         line_sheet_id = cursor.lastrowid
         
-        # Save the PDF with original filename
-        try:
-            # Get original filename for better identification
-            original_filename = secure_filename(album_price_list.filename)
-            filename_without_ext = os.path.splitext(original_filename)[0]
-            # Clean up the filename - remove spaces and special characters
-            clean_filename = re.sub(r'[^a-zA-Z0-9_-]', '_', filename_without_ext.lower())
-            # Add timestamp to ensure uniqueness
-            timestamp = int(datetime.now().timestamp())
-            pdf_public_id = f"{clean_filename}_{timestamp}.pdf"  # Added .pdf extension
-            
-            album_result = cloudinary.uploader.upload(
-                album_price_list,
-                public_id=pdf_public_id,  # Use original filename with timestamp
-                resource_type="raw",  # For non-image files like PDFs
-                overwrite=True,
-                invalidate=True
-            )
-            
-            album_price_list_url = album_result['secure_url']
-            
-            # Update the album price list URL in the database
-            conn.execute(
-                "INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?)",
-                ('album_price_list_url', album_price_list_url)
-            )
-        except Exception as e:
-            logging.error(f"Error uploading Album Price List to Cloudinary: {e}")
-            return jsonify({'success': False, 'error': str(e)}), 500
-        
         # Process Excel file
         try:
             # Read Excel file
@@ -625,6 +533,15 @@ def upload_excel():
                 sizes = str(row.get('SIZES', '')) if not pd.isna(row.get('SIZES', '')) else ''
                 price = str(row.get('PRICE', '')) if not pd.isna(row.get('PRICE', '')) else ''
                 
+                # Use row discount or global discount if applied
+                row_discount = float(row.get('DISCOUNT', 0)) if not pd.isna(row.get('DISCOUNT', 0)) else 0
+                discount_percent = row_discount
+                
+                # Apply global discount if specified and no row-specific discount
+                if apply_global_discount and global_discount_percent > 0:
+                    discount_percent = global_discount_percent
+                    logging.info(f"Applied {discount_percent}% discount to product {style}")
+                
                 # Skip empty rows
                 if not style:
                     continue
@@ -632,13 +549,14 @@ def upload_excel():
                 # Check if image exists in Cloudinary for this style
                 try:
                     image_url = get_cloudinary_url(f"{style}")  # No folder structure
-                except:
+                except Exception as e:
+                    logging.error(f"Error getting Cloudinary URL for {style}: {e}")
                     image_url = ''
                 
-                # Insert into database with line_sheet_id
+                # Insert into database with line_sheet_id and discount_percent
                 conn.execute(
-                    "INSERT INTO products (style, colors, description, sizes, price, image, line_sheet_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    (style, color, description, sizes, price, image_url, line_sheet_id)
+                    "INSERT INTO products (style, colors, description, sizes, price, image, line_sheet_id, discount_percent) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                    (style, color, description, sizes, price, image_url, line_sheet_id, discount_percent)
                 )
             
             return redirect(url_for('view_line_sheet', filename=line_sheet_filename))
@@ -648,9 +566,6 @@ def upload_excel():
 
 @app.route('/line_sheets')
 def line_sheets():
-    # This route should also be accessible without authentication
-    #title = request.args.get('title', 'MINKAS LINE SHEETS')
-
     title = request.args.get('title', '').strip()
 
     # Redirect specifically for this collection
@@ -666,8 +581,8 @@ def line_sheets():
     # Convert SQLite row objects to plain lists for JSON serialization
     safe_products = []
     for product in products:
-        # Check required fields excluding id and line_sheet_id
-        if all(product[1:7]):
+        # Only check if style number exists, allow other fields to be empty
+        if product[1]:  # Style is at index 1
             # Convert product tuple to list
             product_list = list(product)
             
@@ -700,22 +615,12 @@ def line_sheets():
                     logging.error(f"Error generating Cloudinary URL for {style_number}: {e}")
             safe_products.append(product_list)
     
-    # Get the album price list URL
-    album_price_list_url = get_album_price_list_url()
-    
     return render_template(
         'line_sheets.html', 
         products=safe_products, 
-        title=title, 
-        album_price_list_url=album_price_list_url
+        title=title,
+        album_price_list_url="#"  # Add dummy value for template compatibility
     )
-
-@app.route('/list_line_sheets')
-def list_line_sheets():
-    # This route should also be accessible without authentication
-    with sqlite3.connect("products.db") as conn:
-        line_sheets = conn.execute("SELECT * FROM line_sheets ORDER BY created_at DESC").fetchall()
-    return render_template('list_line_sheets.html', line_sheets=line_sheets)
 
 @app.route('/view_line_sheet/<filename>')
 def view_line_sheet(filename):
@@ -744,7 +649,8 @@ def view_line_sheet(filename):
                 # Convert SQLite row objects to plain lists for JSON serialization
                 safe_products = []
                 for product in products:
-                    if all(product[1:7]):  # Check required fields excluding id and line_sheet_id
+                    # Only check if style number exists, allow other fields to be empty
+                    if product[1]:  # Style is at index 1
                         # Convert product tuple to list
                         product_list = list(product)
                         
@@ -775,17 +681,40 @@ def view_line_sheet(filename):
                                     )
                             except Exception as e:
                                 logging.error(f"Error generating Cloudinary URL for {style_number}: {e}")
+                        
+                        # Calculate discounted price if discount_percent exists
+                        discount_percent = product_list[8] if len(product_list) > 8 else 0
+                        price = product_list[5]
+                        
+                        # Add discounted price to the product data if discount is applied
+                        if price and discount_percent and float(discount_percent) > 0:
+                            try:
+                                # Extract numeric price (handle currency symbols)
+                                price_str = price.strip()
+                                numeric_price = float(''.join(filter(lambda x: x.isdigit() or x == '.', price_str)))
+                                
+                                # Calculate discounted price
+                                discounted_price = numeric_price * (1 - float(discount_percent)/100)
+                                
+                                # Format with same currency symbol if present
+                                currency_symbol = ''.join(c for c in price_str if not (c.isdigit() or c == '.'))
+                                formatted_discount = f"{currency_symbol}{discounted_price:.2f}"
+                                
+                                # Add to product list
+                                product_list.append(formatted_discount)
+                            except (ValueError, TypeError):
+                                product_list.append("")
+                        else:
+                            product_list.append("")
+                                
                         safe_products.append(product_list)
-                
-                # Get the album price list URL
-                album_price_list_url = get_album_price_list_url()
                 
                 # Render the line_sheets template with the sanitized products data
                 return render_template(
                     'line_sheets.html', 
                     products=safe_products, 
-                    title=title, 
-                    album_price_list_url=album_price_list_url
+                    title=title,
+                    album_price_list_url="#"  # Add dummy value for template compatibility
                 )
             else:
                 # If no line sheet found in database, return 404
@@ -795,60 +724,40 @@ def view_line_sheet(filename):
         logging.error(f"Error rendering line sheet {filename}: {e}")
         return f"Error rendering line sheet: {str(e)}", 500
 
-@app.route('/upload-album-price-list', methods=['POST'])
-def upload_album_price_list():
-    if 'album_price_list' not in request.files:
-        return jsonify({'success': False, 'error': 'No file uploaded'}), 400
+@app.route('/list_line_sheets')
+def list_line_sheets():
+    # This route should also be accessible without authentication
+    with sqlite3.connect("products.db") as conn:
+        line_sheets = conn.execute("SELECT * FROM line_sheets ORDER BY created_at DESC").fetchall()
     
-    file = request.files['album_price_list']
-    if file.filename == '':
-        return jsonify({'success': False, 'error': 'No selected file'}), 400
-    
-    # Check if it's a PDF
-    if not file.filename.lower().endswith('.pdf'):
-        return jsonify({'success': False, 'error': 'Uploaded file must be a PDF'}), 400
-    
+    # Add a dummy album_price_list_url to maintain template compatibility
+    return render_template('list_line_sheets.html', line_sheets=line_sheets, album_price_list_url="#")
+
+@app.route('/update-discount', methods=['POST'])
+def update_discount():
+    if not session.get('logged_in'):
+        return jsonify({'success': False, 'error': 'Not logged in'}), 401
+        
     try:
-        # Get original filename for better identification
-        original_filename = secure_filename(file.filename)
-        filename_without_ext = os.path.splitext(original_filename)[0]
-        # Clean up the filename - remove spaces and special characters
-        clean_filename = re.sub(r'[^a-zA-Z0-9_-]', '_', filename_without_ext.lower())
-        # Add timestamp to ensure uniqueness
-        timestamp = int(datetime.now().timestamp())
-        pdf_public_id = f"{clean_filename}_{timestamp}.pdf"  # Added .pdf extension
+        product_id = request.form.get('product_id')
+        discount_percent = request.form.get('discount_percent', 0)
         
-        # Upload to Cloudinary with original filename to prevent overwriting
-        result = cloudinary.uploader.upload(
-            file,
-            public_id=pdf_public_id,
-            resource_type="raw",  # For non-image files like PDFs
-            overwrite=True,
-            invalidate=True
-        )
-        
-        # Get the secure URL
-        pdf_url = result['secure_url']
-        
-        # Update the database with the new URL
+        # Convert discount to float or set to 0 if invalid
+        try:
+            discount_percent = float(discount_percent)
+        except (ValueError, TypeError):
+            discount_percent = 0
+            
         with sqlite3.connect("products.db") as conn:
             conn.execute(
-                "INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?)",
-                ('album_price_list_url', pdf_url)
+                "UPDATE products SET discount_percent = ? WHERE id = ?",
+                (discount_percent, product_id)
             )
-        
-        logging.info(f"Album Price List PDF uploaded to Cloudinary: {pdf_url} with ID: {pdf_public_id}")
-        return jsonify({
-            'success': True,
-            'url': pdf_url
-        })
-        
+            
+        return jsonify({'success': True})
     except Exception as e:
-        logging.error(f"Error uploading Album Price List to Cloudinary: {e}")
-        return jsonify({
-            'success': False,
-            'error': f"Error uploading Album Price List: {str(e)}"
-        }), 500
+        logging.error(f"Error updating discount: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

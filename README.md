@@ -4,7 +4,19 @@ A web application to manage line sheets for fashion collections with Cloudinary 
 
 ## Recent Changes
 
-### April 15,2025
+### April 22, 2025
+
+- **Discount Feature**: Added support for applying percentage discounts to products
+  - Implemented discount toggle UI in product creation form
+  - Added crossed-out original prices with discounted prices in line sheets
+  - Enabled global discount application to all products in a line sheet
+- **UI Improvements**: 
+  - Enhanced Home button with bold text and improved styling
+  - Fixed file upload display to show filenames in a single line with ellipsis
+  - Standardized button corner radius across the application for visual consistency
+  - Fixed spacing between price and currency symbols
+
+### April 15, 2025
 
 - **Cloudinary Upload Optimization**: Added check to skip uploading images that already exist in Cloudinary to prevent duplicate uploads
 - **PDF Handling Improvement**: Fixed album price list PDF handling to preserve original filenames and correctly include .pdf extension

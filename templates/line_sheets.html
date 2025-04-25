@@ -41,6 +41,23 @@
         --color-text-secondary: #9ca3af;
         --shadow-color: rgba(0, 0, 0, 0.5);
     }
+    
+    /* Add styles for discounted prices */
+    .original-price {
+        text-decoration: line-through;
+        color: var(--color-text-secondary);
+        opacity: 0.8;
+        margin-right: 8px;
+    }
+    
+    .discount-price {
+        color: #dc2626; /* red-600 */
+        font-weight: 600;
+    }
+    
+    .dark .discount-price {
+        color: #ef4444; /* red-500 for dark mode */
+    }
 
     body {
         margin: 0;
@@ -86,7 +103,6 @@
         top: 0;
         left: 0;
         width: 100%;
-        height: 100%;
         object-fit: inherit;
         transition: transform 0.5s ease;
         background-color: var(--color-bg-secondary);  /* Match with card background */
@@ -170,7 +186,6 @@
         margin-top: 1rem;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
     }
 
     .price i {
@@ -229,24 +244,9 @@
         font-size: 0.9rem;
     }
 
+    /* Remove album price styles */
     .album-price {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background-image: linear-gradient(to right, var(--primary-color), var(--accent-color));
-        color: white;
-        padding: 12px 24px;
-        border-radius: 8px;
-        font-weight: 600;
-        box-shadow: 0 4px 12px var(--shadow-color);
-        z-index: 1100;
-        cursor: pointer;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .album-price:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px var(--shadow-color);
+        display: none; /* Hide the album price button */
     }
 
     /* PhotoSwipe Customization - White minimal glass design */
@@ -542,7 +542,8 @@
 <div class="product-grid">
     {% for product in products %}
     <div class="product-card">
-        <a href="{{ product[6] }}" class="image-container" data-size="1024x1024" data-caption="Style #: {{ product[1] }} | Price: ${{ product[5] }}">
+        <a href="{{ product[6] }}" class="image-container" data-size="1024x1024" 
+           data-caption="Style #: {{ product[1] }} | Price: {% if product[9] %}${{ product[9] }}{% else %}${{ product[5] }}{% endif %}">
             <img src="{{ product[6] }}" 
                  alt="Style {{ product[1] }}"
                  loading="lazy"
@@ -556,33 +557,36 @@
                         <i class="fas fa-palette"></i>
                         Color:
                     </span>
-                    <span class="detail-value">{{ product[2] }}</span>
+                    <span class="detail-value">{{ product[2] if product[2] else '' }}</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">
                         <i class="fas fa-tag"></i>
                         Description:
                     </span>
-                    <span class="detail-value">{{ product[3] }}</span>
+                    <span class="detail-value">{{ product[3] if product[3] else '' }}</span>
                 </div>
                 <div class="detail-row sizes-detail">
                     <span class="detail-label">
                         <i class="fas fa-ruler"></i>
                         Sizes:
                     </span>
-                    <div class="detail-value size-details" data-size="{{ product[4] }}">{{ product[4] }}</div>
+                    <div class="detail-value size-details" data-size="{{ product[4] if product[4] else '' }}">{{ product[4] if product[4] else '' }}</div>
                 </div>
                 <div class="price">
                     <i class="fas fa-dollar-sign"></i>
-                    {{ "%.2f"|format(product[5]|float) if product[5] and product[5]|string|trim is not none else "Not Available" }}
+                    {% if product[9] %}
+                        <span class="original-price">{{ "%.2f"|format(product[5]|float) if product[5] and product[5]|string|trim is not none else "Not Available" }}</span>
+                        <span class="discount-price">${{ product[9] }}</span>
+                    {% else %}
+                        {{ "%.2f"|format(product[5]|float) if product[5] and product[5]|string|trim is not none else "Not Available" }}
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
     {% endfor %}
 </div>
-
-<a href="{{ album_price_list_url }}" class="album-price" target="_blank">Album Price List</a>
 
 <!-- PhotoSwipe Template -->
 <div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
@@ -626,8 +630,6 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Remove all the album price list handling code since we're using a direct link now
-        
         // Error handling for images
         document.querySelectorAll('img[data-fallback]').forEach(img => {
             img.onerror = function() {

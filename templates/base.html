@@ -125,6 +125,8 @@
             border-radius: 0.75rem;
             background: var(--color-bg-secondary);
             padding: 1px;
+            overflow: visible !important;
+            margin-bottom: 0;
         }
           
         .gradient-border::before {
@@ -143,6 +145,37 @@
           
         .gradient-border:hover::before {
             opacity: 1;
+        }
+        
+        /* Home Button Styles */
+        .home-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 18px;
+            height: 40px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            margin-right: 12px;
+            position: relative;
+            z-index: 10;
+            font-size: 22px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        
+        /* Handle hover without scaling to avoid clipping issues */
+        .home-button:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(135deg, #7c3aed, #9333ea);
+        }
+        
+        /* Ensure parent containers don't clip content */
+        .flex.items-center, .flex.justify-between {
+            overflow: visible !important;
         }
         
         /* Dark mode toggle switch */
@@ -189,7 +222,13 @@
         <div class="{% block container_classes %}gradient-border p-6 rounded-xl shadow-sm{% endblock %}">
             {% block header %}
             <div class="flex justify-between items-center mb-6">
-                <h1 class="text-2xl md:text-3xl font-bold" style="color: var(--color-text-primary);">{% block header_title %}Line Sheet Manager{% endblock %}</h1>
+                <div class="flex items-center">
+                    <!-- Home Button -->
+                    <a href="https://minkas.ca/" class="home-button" title="Go to Minkas Homepage">
+                        Home
+                    </a>
+                    <h1 class="text-2xl md:text-3xl font-bold" style="color: var(--color-text-primary);">{% block header_title %}Line Sheet Manager{% endblock %}</h1>
+                </div>
                 {% block header_actions %}{% endblock %}
             </div>
             {% endblock %}
