@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 {% endblock %}
 
-{% block container_classes %}max-w-7xl mx-auto p-6 rounded-lg shadow-lg{% endblock %}
+{% block container_classes %}mx-auto rounded-lg{% endblock %}
 
 {% block additional_styles %}
 <style>
@@ -69,9 +69,8 @@
 
     .product-grid {
         display: grid;
-        grid-template-columns: repeat(4, minmax(220px, 1fr));
+        grid-template-columns: repeat(5, minmax(220px, 1fr));
         gap: 1.5rem;
-        padding: 1rem;
         margin: 0 auto;
     }
 
@@ -92,7 +91,7 @@
 
     .image-container {
         position: relative;
-        padding-top: 120% !important;
+        padding-top: 130% !important;
         overflow: hidden;
         background-color: var(--color-bg-secondary);  /* Match with card background */
         border-bottom: none;  /* Remove any potential border */
@@ -102,6 +101,7 @@
         position: absolute;
         top: 0;
         left: 0;
+        /* height: 100%; */
         width: 100%;
         object-fit: inherit;
         transition: transform 0.5s ease;
@@ -128,11 +128,12 @@
     }
 
     .product-info {
-        padding: 1rem;
+        padding: 0.5rem;
         flex-grow: 1;
         display: flex;
         flex-direction: column;
         background-color: var(--color-bg-secondary);
+        align-items: center;
     }
 
     .dark .product-info {
@@ -153,11 +154,45 @@
         margin-top: 1rem;
     }
 
+    /* Add these new styles */
+    .detail-row.description-row {
+        align-items: flex-start;
+    }
+
+    .detail-value.description-value {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+    }
+
+    .fabric-list {
+        display: flex;
+        flex-direction: column;
+        gap: 4px; /* Increased gap for better readability */
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .fabric-item {
+        display: flex;
+        align-items: flex-start;
+        color: var(--color-text-primary); /* Use primary color for better visibility */
+        font-weight: 500; /* Slightly bolder */
+    }
+
+    .fabric-item:before {
+        content: "•";
+        margin-right: 8px; /* Slightly increased spacing */
+        color: var(--accent-color); /* Use accent color for bullets */
+        font-weight: bold;
+    }
+
     .detail-row {
         display: grid;
         grid-template-columns: 100px 1fr;
         gap: 0.5rem;
-        align-items: center;
+        align-items: start;
     }
 
     .detail-label {
@@ -176,7 +211,8 @@
     }
 
     .detail-value {
-        color: var(--color-text-secondary);
+        color: var(--color-text-primary); /* Use primary text color instead of secondary */
+        font-weight: 500; /* Slightly increased font weight */
     }
 
     .price {
@@ -202,14 +238,10 @@
     }
 
     .gallery-note {
-        color: var(--color-text-secondary);
+        color: var(--color-text-primary);
         text-align: center;
-        margin-bottom: 2rem;
-        font-size: 0.9rem;
-        background-color: var(--color-bg-secondary);
-        padding: 1rem;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px var(--shadow-color);
+        margin-bottom: 1rem;
+        padding: 0.5rem;
     }
 
     .size-details {
@@ -225,6 +257,12 @@
         margin-bottom: 6px;
     }
     
+    .size-column {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    
     .size-label {
         font-weight: 600;
         font-size: 0.9rem;
@@ -232,8 +270,8 @@
     }
     
     .size-value {
-        font-size: 0.95rem;
         color: var(--color-text-secondary);
+        font-weight: normal;
     }
     
     .size-total {
@@ -529,10 +567,139 @@
             grid-template-columns: repeat(1, minmax(220px, 1fr));
         }
     }
+
+    .highlight-special-size {
+        background-color: rgba(79, 70, 229, 0.1);
+        color: var(--primary-color);
+        font-weight: 600;
+        border-radius: 4px;
+        padding: 2px 6px;
+        display: inline-block;
+        border: 1px solid var(--primary-color);
+    }
+
+    .dark .highlight-special-size {
+        background-color: rgba(99, 102, 241, 0.2);
+        border-color: var(--accent-color);
+        color: #fff; /* Change font color to white in dark mode */
+    }
+
+    /* Add to your existing CSS */
+.detail-row.sizes-detail {
+    display: block; /* Override grid display */
+}
+
+.detail-row.sizes-detail .detail-label {
+    display: block;
+    margin-bottom: 8px;
+}
+
+.detail-row.sizes-detail .detail-value {
+    width: 100%;
+}
+
+.size-details.highlight-special-size.full-width {
+    width: 100%;
+    display: block;
+}
+
+.size-details .sizes-grid {
+    margin-top: 4px;
+}
+
+/* Sort dropdown styles - enhanced */
+.sort-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    padding-right: 8px;
+    position: relative;
+}
+
+.sort-label {
+    color: var(--color-text-primary);
+    font-weight: 500;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+}
+
+.sort-label i {
+    margin-right: 6px;
+    color: var(--primary-color);
+}
+
+.sort-dropdown {
+    background-color: var(--color-bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--color-text-primary);
+    padding: 8px 36px 8px 16px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+    box-shadow: 0 2px 5px var(--shadow-color);
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
+    font-weight: 500;
+}
+
+.sort-dropdown:hover, .sort-dropdown:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 3px 8px var(--shadow-color);
+    transform: translateY(-1px);
+}
+
+.sort-container::after {
+    content: "\f107";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: var(--primary-color);
+    font-size: 1rem;
+}
+
+.dark .sort-dropdown {
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text-primary);
+    border-color: var(--border-color);
+}
+
+@media (max-width: 640px) {
+    .sort-container {
+        margin-top: 12px;
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
 </style>
 {% endblock %}
 
 {% block header_title %}<h1 class="header-title">{{ title|upper }}</h1>{% endblock %}
+
+{% block header_actions %}
+<div class="sort-container">
+    <label for="sort-select" class="sort-label">
+        <i class="fas fa-sort"></i>Sort by:
+    </label>
+    <select id="sort-select" class="sort-dropdown">
+        <option value="default">Default Order</option>
+        <option value="style-asc">Style No. (A to Z)</option>
+        <option value="style-desc">Style No. (Z to A)</option>
+        <option value="price-asc">Price (Low to High)</option>
+        <option value="price-desc">Price (High to Low)</option>
+        <option value="qty-asc">Qty (Low to High)</option>
+        <option value="qty-desc">Qty (High to Low)</option>
+    </select>
+</div>
+{% endblock %}
 
 {% block content %}
 <div class="gallery-note">
@@ -675,28 +842,26 @@
             }
         }
 
-        // Update size displays with tabular format
+        // Update size displays section
         document.querySelectorAll('.detail-value[data-size]').forEach(element => {
             const sizeString = element.getAttribute('data-size');
             const result = parseSizeRatios(sizeString);
             
             if (result.isRatio) {
-                const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
-                
-                // Create a tabular display with labels on top
+                // Keep the existing tabular display with highlight for size ratios
                 let sizesHTML = `
-                    <div class="size-details">
+                    <div class="size-details highlight-special-size full-width">
                         <div class="sizes-grid">
                 `;
                 
-                // Add size labels (S, M, L, XL, XXL)
-                sizes.forEach(size => {
-                    sizesHTML += `<div class="size-label">${size}</div>`;
-                });
-                
-                // Add size values (quantities)
-                result.ratios.forEach(ratio => {
-                    sizesHTML += `<div class="size-value">${ratio.quantity}</div>`;
+                ['S', 'M', 'L', 'XL', 'XXL'].forEach((size, index) => {
+                    const quantity = result.ratios[index] ? result.ratios[index].quantity : 0;
+                    sizesHTML += `
+                        <div class="size-column">
+                            <div class="size-label">${size}</div>
+                            <div class="size-value">${quantity}</div>
+                        </div>
+                    `;
                 });
                 
                 sizesHTML += `
@@ -705,12 +870,71 @@
                     </div>
                 `;
                 
+                // Update the parent detail-row structure for ratio display
+                const detailRow = element.closest('.detail-row');
+                if (detailRow) {
+                    detailRow.style.display = 'block';
+                    const label = detailRow.querySelector('.detail-label');
+                    if (label) {
+                        label.style.marginBottom = '8px';
+                    }
+                }
+                
                 element.innerHTML = sizesHTML;
             } else {
-                // Display the regular size string as is
-                element.textContent = result.sizeString;
+                // For standard size ranges
+                if (sizeString.trim() === 'S-XXL') {
+                    // Don't apply highlight for S-XXL
+                    element.innerHTML = sizeString;
+                } else {
+                    // Keep highlight for all other size formats
+                    element.innerHTML = `<span class="highlight-special-size">${sizeString}</span>`;
+                }
+                
+                // Reset the parent detail-row to original grid layout
+                const detailRow = element.closest('.detail-row');
+                if (detailRow) {
+                    detailRow.style.display = 'grid';
+                    const label = detailRow.querySelector('.detail-label');
+                    if (label) {
+                        label.style.marginBottom = '0';
+                    }
+                }
             }
         });
+
+        // Add this function inside your DOMContentLoaded event handler
+function formatFabricDescription(description) {
+    if (!description) return '';
+    
+    // Check if this looks like a fabric composition (contains percentages)
+    if (description.includes('%')) {
+        // Try to split by percentage pattern
+        const parts = description.split(/(\d+%\s*[A-Z]+(?:\s+[A-Z]+)*)/g)
+            .filter(part => part.trim().length > 0);
+        
+        if (parts.length > 1) {
+            return `<ul class="fabric-list">
+                ${parts.map(part => `<li class="fabric-item">${part.trim()}</li>`).join('')}
+            </ul>`;
+        }
+    }
+    
+    return description;
+}
+
+// After your existing code for parsing size ratios
+document.querySelectorAll('.detail-row').forEach(row => {
+    const label = row.querySelector('.detail-label');
+    if (label && label.textContent.includes('Description:')) {
+        row.classList.add('description-row');
+        const valueElement = row.querySelector('.detail-value');
+        if (valueElement) {
+            valueElement.classList.add('description-value');
+            valueElement.innerHTML = formatFabricDescription(valueElement.textContent);
+        }
+    }
+});
 
         // PhotoSwipe initialization using standard approach
         var initPhotoSwipeFromDOM = function(gallerySelector) {
@@ -1045,6 +1269,177 @@
         } catch (e) {
             console.error("Error parsing products data:", e);
         }
+
+        // Sort functionality
+        const sortSelect = document.getElementById('sort-select');
+        if (sortSelect) {
+            sortSelect.addEventListener('change', function() {
+                const sortBy = this.value;
+                const productGrid = document.querySelector('.product-grid');
+                const productCards = Array.from(productGrid.querySelectorAll('.product-card'));
+                
+                // First store the original order for returning to "Default Order"
+                if (!productGrid.hasAttribute('data-original-order')) {
+                    const originalOrder = productCards.map(card => card.outerHTML);
+                    productGrid.setAttribute('data-original-order', JSON.stringify(originalOrder));
+                }
+                
+                // Define different sorting functions
+                const sortFunctions = {
+                    'default': function() {
+                        // Restore original order
+                        try {
+                            const originalOrder = JSON.parse(productGrid.getAttribute('data-original-order'));
+                            productGrid.innerHTML = originalOrder.join('');
+                            // Re-initialize event listeners for the restored elements
+                            initializeProductCardEvents();
+                        } catch (e) {
+                            console.error("Error restoring default order:", e);
+                        }
+                        return;
+                    },
+                    
+                    'style-asc': function() {
+                        productCards.sort((a, b) => {
+                            const styleA = a.querySelector('.style-number').textContent.trim().toLowerCase().replace('style # ', '');
+                            const styleB = b.querySelector('.style-number').textContent.trim().toLowerCase().replace('style # ', '');
+                            return styleA.localeCompare(styleB, undefined, {numeric: true, sensitivity: 'base'});
+                        });
+                    },
+                    
+                    'style-desc': function() {
+                        productCards.sort((a, b) => {
+                            const styleA = a.querySelector('.style-number').textContent.trim().toLowerCase().replace('style # ', '');
+                            const styleB = b.querySelector('.style-number').textContent.trim().toLowerCase().replace('style # ', '');
+                            return styleB.localeCompare(styleA, undefined, {numeric: true, sensitivity: 'base'});
+                        });
+                    },
+                    
+                    'price-asc': function() {
+                        productCards.sort((a, b) => {
+                            const priceA = extractPrice(a.querySelector('.price').textContent);
+                            const priceB = extractPrice(b.querySelector('.price').textContent);
+                            return priceA - priceB;
+                        });
+                    },
+                    
+                    'price-desc': function() {
+                        productCards.sort((a, b) => {
+                            const priceA = extractPrice(a.querySelector('.price').textContent);
+                            const priceB = extractPrice(b.querySelector('.price').textContent);
+                            return priceB - priceA;
+                        });
+                    },
+                    
+                    'qty-asc': function() {
+                        productCards.sort((a, b) => {
+                            const qtyA = extractTotalQuantity(a);
+                            const qtyB = extractTotalQuantity(b);
+                            return qtyA - qtyB;
+                        });
+                    },
+                    
+                    'qty-desc': function() {
+                        productCards.sort((a, b) => {
+                            const qtyA = extractTotalQuantity(a);
+                            const qtyB = extractTotalQuantity(b);
+                            return qtyB - qtyA;
+                        });
+                    }
+                };
+                
+                // Helper function to extract price
+                function extractPrice(priceText) {
+                    // First check for discount price
+                    const discountMatch = priceText.match(/\$(\d+(\.\d+)?)/);
+                    if (discountMatch) {
+                        return parseFloat(discountMatch[1]);
+                    }
+                    
+                    // Otherwise get the standard price
+                    const priceMatch = priceText.match(/(\d+(\.\d+)?)/);
+                    return priceMatch ? parseFloat(priceMatch[1]) : 0;
+                }
+                
+                // Helper function to extract quantity
+                function extractTotalQuantity(card) {
+                    // Look for the size total span
+                    const sizeTotal = card.querySelector('.size-total');
+                    if (sizeTotal) {
+                        const match = sizeTotal.textContent.match(/Total:\s*(\d+)/);
+                        if (match) return parseInt(match[1]);
+                    }
+                    
+                    // Fallback: try to calculate from individual size values
+                    const sizeValues = card.querySelectorAll('.size-value');
+                    let total = 0;
+                    sizeValues.forEach(el => {
+                        const qty = parseInt(el.textContent);
+                        if (!isNaN(qty)) total += qty;
+                    });
+                    
+                    return total;
+                }
+                
+                // Apply the appropriate sorting function
+                if (sortFunctions[sortBy]) {
+                    if (sortBy !== 'default') {
+                        sortFunctions[sortBy]();
+                        
+                        // Clear and re-append the sorted elements
+                        productGrid.innerHTML = '';
+                        productCards.forEach(card => productGrid.appendChild(card));
+                    } else {
+                        sortFunctions[sortBy]();
+                    }
+                    
+                    // Show visual feedback that sorting was applied
+                    productGrid.classList.add('sorted');
+                    setTimeout(() => productGrid.classList.remove('sorted'), 500);
+                }
+            });
+        }
+
+        // Helper function to reinitialize event listeners after DOM changes
+        function initializeProductCardEvents() {
+            // Re-initialize PhotoSwipe for the sorted items
+            document.querySelectorAll('.image-container').forEach(img => {
+                img.onclick = function(e) {
+                    e.preventDefault();
+                    // Trigger the original PhotoSwipe click handler
+                    const event = new MouseEvent('click', {
+                        bubbles: true,
+                        cancelable: true,
+                        view: window
+                    });
+                    this.dispatchEvent(event);
+                    return false;
+                };
+            });
+            
+            // Re-initialize error handling for images
+            document.querySelectorAll('img[data-fallback]').forEach(img => {
+                img.onerror = function() {
+                    this.src = this.dataset.fallback;
+                    this.classList.add('error');
+                };
+            });
+        }
+
+        // Add a small animation effect for sorting
+        const style = document.createElement('style');
+        style.textContent = `
+            .product-grid.sorted .product-card {
+                animation: sortPulse 0.5s ease-in-out;
+            }
+            
+            @keyframes sortPulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.02); }
+                100% { transform: scale(1); }
+            }
+        `;
+        document.head.appendChild(style);
     });
 </script>    
 {% endblock %}

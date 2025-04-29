@@ -4,6 +4,25 @@ A web application to manage line sheets for fashion collections with Cloudinary 
 
 ## Recent Changes
 
+### April 28, 2025
+
+- **Product Sorting Feature**:
+  - Added sorting capability for line sheet products
+  - Implemented dropdown with sorting options for better user experience
+  - Created responsive sorting UI that adapts to mobile screens
+  
+- **Bug Fixes**:
+  - Fixed missing images issue in line sheet display
+  - Resolved UI inconsistencies across different screen sizes
+  - Improved layout alignment for product details
+
+- **Special Size Highlighting**:
+  - Added visual highlighting for special sizes in line sheets
+  - Implemented responsive size display for mobile devices
+  - Fixed layout issues in size detail rows
+  - Added border and background styling that adapts to dark/light mode
+
+
 ### April 22, 2025
 
 - **Discount Feature**: Added support for applying percentage discounts to products

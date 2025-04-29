@@ -5,3 +5,4 @@ openpyxl
 Jinja2
 cloudinary
 gunicorn
+python-dotenv 
