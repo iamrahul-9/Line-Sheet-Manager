@@ -759,5 +759,28 @@ def update_discount():
         logging.error(f"Error updating discount: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.before_request
+def redirect_minkas_fw25():
+    """
+    Redirect requests from minkas-fw25.onrender.com to minkas.onrender.com
+    while preserving the path and query parameters.
+    """
+    if 'minkas-fw25' in request.host:
+        # Get the current host and replace 'minkas-fw25' with 'minkas'
+        new_host = request.host.replace('minkas-fw25', 'minkas')
+        
+        # Build the new URL with the modified host
+        scheme = request.scheme  # http or https
+        path = request.path  # The path part of the URL
+        query_string = request.query_string.decode('utf-8')  # Query parameters
+        
+        # Construct the new URL
+        new_url = f"{scheme}://{new_host}{path}"
+        if query_string:
+            new_url += f"?{query_string}"
+        
+        # Return a permanent redirect response
+        return redirect(new_url, code=301)
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
