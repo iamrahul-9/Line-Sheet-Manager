@@ -218,20 +218,26 @@
         </div>
     </div>
     
-    <div class="mx-auto max-w-7xl py-6">
-        <div class="{% block container_classes %}gradient-border p-6 rounded-xl shadow-sm{% endblock %}">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 py-6">
+        <div class="{% block container_classes %}gradient-border p-4 sm:p-6 rounded-xl shadow-sm{% endblock %}">
             {% block header %}
-            <div class="flex justify-between items-center mb-6">
-                <div class="flex items-center">
-                    <!-- Home Button -->
-                    <a href="https://minkas.ca/" class="home-button" title="Go to Minkas Homepage">
-                        Home
-                    </a>
-                    <h1 class="text-2xl md:text-3xl font-bold" style="color: var(--color-text-primary);">{% block header_title %}Line Sheet Manager{% endblock %}</h1>
-                </div>
-                {% block header_actions %}{% endblock %}
-            </div>
-            {% endblock %}
+<div class="flex flex-col sm:flex-row justify-center sm:justify-between items-center gap-4 mb-6">
+    <div class="flex flex-col sm:flex-row items-center gap-4">
+        <!-- Home Button -->
+        <a href="https://minkas.ca/" class="home-button" title="Go to Minkas Homepage">
+            Home
+        </a>
+        
+        <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-center sm:text-left" style="color: var(--color-text-primary);">
+            {% block header_title %}Line Sheet Manager{% endblock %}
+        </h1>
+    </div>
+    
+    <div class="w-full sm:w-auto flex justify-center sm:justify-end">
+        {% block header_actions %}{% endblock %}
+    </div>
+</div>
+{% endblock %}
             
             {% block content %}{% endblock %}
         </div>
