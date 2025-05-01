@@ -782,5 +782,147 @@ def redirect_minkas_fw25():
         # Return a permanent redirect response
         return redirect(new_url, code=301)
 
+# Add these routes to your Flask application
+
+@app.route('/edit_line_sheet/<int:id>')
+def edit_line_sheet(id):
+    """Display the edit form for a specific line sheet"""
+    # Query the database to get the line sheet details
+    with sqlite3.connect("products.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, title, filename, created_at FROM line_sheets WHERE id = ?", (id,))
+        line_sheet = cursor.fetchone()
+    
+    if not line_sheet:
+        flash("Line sheet not found", "error")
+        return redirect(url_for('list_line_sheets'))
+    
+    return render_template('edit_line_sheet.html', line_sheet=line_sheet)
+
+@app.route('/update_line_sheet/<int:id>', methods=['POST'])
+def update_line_sheet(id):
+    """Process the edit form and update the line sheet"""
+    try:
+        with sqlite3.connect("products.db") as conn:
+            cursor = conn.cursor()
+            
+            # Get the current line sheet
+            cursor.execute("SELECT id, title, filename FROM line_sheets WHERE id = ?", (id,))
+            line_sheet = cursor.fetchone()
+            
+            if not line_sheet:
+                flash("Line sheet not found", "error")
+                return redirect(url_for('list_line_sheets'))
+            
+            # Check for uploaded file
+            if 'excel' not in request.files:
+                flash("No file uploaded", "error")
+                return redirect(url_for('edit_line_sheet', id=id))
+            
+            excel_file = request.files['excel']
+            if excel_file.filename == '':
+                flash("No file selected", "error")
+                return redirect(url_for('edit_line_sheet', id=id))
+            
+            # Get any existing discount info from existing products
+            cursor.execute("""
+                SELECT style, discount_percent FROM products 
+                WHERE line_sheet_id = ? AND discount_percent > 0
+            """, (id,))
+            existing_discounts = {row[0]: row[1] for row in cursor.fetchall()}
+            
+            # Calculate global discount (if any products have the same discount)
+            global_discount = None
+            if existing_discounts:
+                discount_values = set(existing_discounts.values())
+                if len(discount_values) == 1:
+                    # All products have the same discount - use it as global
+                    global_discount = next(iter(discount_values))
+            
+            # Save the file temporarily
+            temp_file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'temp_' + secure_filename(excel_file.filename))
+            excel_file.save(temp_file_path)
+            
+            try:
+                # Read Excel data
+                df = pd.read_excel(temp_file_path)
+                
+                # Delete existing products for this line sheet
+                cursor.execute("DELETE FROM products WHERE line_sheet_id = ?", (id,))
+                
+                # Process the Excel data and insert updated products
+                for _, row in df.iterrows():
+                    # Extract data (handle possible missing columns)
+                    style = str(row.get('STYLE#', '')) if not pd.isna(row.get('STYLE#', '')) else ''
+                    color = str(row.get('COLOR', '')) if not pd.isna(row.get('COLOR', '')) else ''
+                    description = str(row.get('DESCRIPTION', '')) if not pd.isna(row.get('DESCRIPTION', '')) else ''
+                    sizes = str(row.get('SIZES', '')) if not pd.isna(row.get('SIZES', '')) else ''
+                    price = str(row.get('PRICE', '')) if not pd.isna(row.get('PRICE', '')) else ''
+                    
+                    # Skip empty rows
+                    if not style:
+                        continue
+                    
+                    # Apply discount based on existing discount info
+                    discount_percent = 0
+                    
+                    # First check if this style had a discount previously
+                    if style in existing_discounts:
+                        discount_percent = existing_discounts[style]
+                    # Otherwise check if there was a global discount
+                    elif global_discount:
+                        discount_percent = global_discount
+                    
+                    # Check if image exists in Cloudinary for this style
+                    try:
+                        image_url = get_cloudinary_url(f"{style}")
+                    except Exception as e:
+                        logging.error(f"Error getting Cloudinary URL for {style}: {e}")
+                        image_url = ''
+                    
+                    # Insert into database with line_sheet_id and preserved discount_percent
+                    cursor.execute(
+                        "INSERT INTO products (style, colors, description, sizes, price, image, line_sheet_id, discount_percent) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                        (style, color, description, sizes, price, image_url, id, discount_percent)
+                    )
+                
+                conn.commit()
+                
+                # Clean up temp file
+                os.remove(temp_file_path)
+                
+                flash("Line sheet updated successfully", "success")
+                return redirect(url_for('view_line_sheet', filename=line_sheet[2]))
+                
+            except Exception as e:
+                logging.error(f"Error updating line sheet: {e}")
+                flash(f"Error updating line sheet: {str(e)}", "error")
+                return redirect(url_for('edit_line_sheet', id=id))
+                
+    except Exception as e:
+        logging.error(f"Error in update_line_sheet: {e}")
+        flash(f"Error updating line sheet: {str(e)}", "error")
+        return redirect(url_for('edit_line_sheet', id=id))
+
+@app.route('/delete_line_sheet/<int:id>')
+def delete_line_sheet(id):
+    """Delete a line sheet and associated products"""
+    try:
+        with sqlite3.connect("products.db") as conn:
+            cursor = conn.cursor()
+            # First, delete all products associated with this line sheet
+            cursor.execute("DELETE FROM products WHERE line_sheet_id = ?", (id,))
+            
+            # Then delete the line sheet itself
+            cursor.execute("DELETE FROM line_sheets WHERE id = ?", (id,))
+            
+            conn.commit()
+        
+        flash("Line sheet deleted successfully", "success")
+    except Exception as e:
+        flash(f"Error deleting line sheet: {str(e)}", "error")
+    
+    return redirect(url_for('list_line_sheets'))
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

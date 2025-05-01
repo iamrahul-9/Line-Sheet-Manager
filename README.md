@@ -4,6 +4,20 @@ A web application to manage line sheets for fashion collections with Cloudinary 
 
 ## Recent Changes
 
+### May 1, 2025
+
+- **Line Sheet Management Improvements**:
+  - Added Edit and Delete functionality for existing line sheets
+  - Implemented streamlined editing workflow with Excel file upload
+  - Added confirmation dialog for line sheet deletion to prevent accidental data loss
+  - Preserved discount settings when updating line sheets
+
+- **UI Enhancements**:
+  - Fixed button clickability issues through improved z-index management
+  - Standardized form styling between create and edit interfaces
+  - Added visual feedback during line sheet updates with progress indicator
+  - Improved accessibility of action buttons in list view
+
 ### April 28, 2025
 
 - **Product Sorting Feature**:
