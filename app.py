@@ -726,12 +726,22 @@ def view_line_sheet(filename):
 
 @app.route('/list_line_sheets')
 def list_line_sheets():
-    # This route should also be accessible without authentication
-    with sqlite3.connect("products.db") as conn:
-        line_sheets = conn.execute("SELECT * FROM line_sheets ORDER BY created_at DESC").fetchall()
+    # Check if user is logged in, redirect to login if not
+    if not session.get('logged_in'):
+        flash('Please log in to access line sheets', 'warning')
+        return redirect(url_for('login'))
     
-    # Add a dummy album_price_list_url to maintain template compatibility
-    return render_template('list_line_sheets.html', line_sheets=line_sheets, album_price_list_url="#")
+    # Continue with existing line sheet listing code
+    try:
+        with sqlite3.connect("products.db") as conn:
+            line_sheets = conn.execute(
+                "SELECT id, title, filename, created_at FROM line_sheets ORDER BY created_at DESC"
+            ).fetchall()
+        return render_template('list_line_sheets.html', line_sheets=line_sheets)
+    except Exception as e:
+        logging.error(f"Error listing line sheets: {e}")
+        flash('An error occurred while loading line sheets', 'error')
+        return redirect(url_for('index'))
 
 @app.route('/update-discount', methods=['POST'])
 def update_discount():

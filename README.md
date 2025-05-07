@@ -4,6 +4,10 @@ A web application to manage line sheets for fashion collections with Cloudinary 
 
 ## Recent Changes
 
+### May 7, 2025
+  - Added some authetication
+  - Added a feature to highlight some special descriptions 
+
 ### May 1, 2025
 
 - **Line Sheet Management Improvements**:

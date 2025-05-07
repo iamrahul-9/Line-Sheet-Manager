@@ -679,7 +679,7 @@
 
 .dark .sort-dropdown {
     background-color: var(--color-bg-secondary);
-    color: var(--color-text-primary);
+    color: var (--color-text-primary);
     border-color: var(--border-color);
 }
 
@@ -919,7 +919,7 @@ function formatFabricDescription(description) {
     if (!description) return '';
     
     // Check for special product types to highlight (case insensitive)
-    const specialTypes = ["Pant", "Plazzo", "Reversible Plazzo", "Skirt"];
+    const specialTypes = ["Reversible Plazzo", "Reversible Top", "Reversible Dress", "Reversible Skirt"];
     
     // First check if it's a special product type that needs highlighting
     for (const type of specialTypes) {
@@ -957,6 +957,9 @@ document.querySelectorAll('.detail-row').forEach(row => {
         }
     }
 });
+
+// Add this call here to highlight colors
+highlightSameStyleDifferentColors();
 
         // PhotoSwipe initialization using standard approach
         var initPhotoSwipeFromDOM = function(gallerySelector) {
@@ -1462,6 +1465,57 @@ document.querySelectorAll('.detail-row').forEach(row => {
             }
         `;
         document.head.appendChild(style);
+        
+        // Add this function to your DOMContentLoaded event handler
+        function highlightSameStyleDifferentColors() {
+            // First, group all products by style number
+            const styleGroups = {};
+            
+            // Find all style numbers and their colors
+            document.querySelectorAll('.product-card').forEach(card => {
+                const styleNumberEl = card.querySelector('.style-number');
+                // More reliable way to find the color element
+                const colorEl = Array.from(card.querySelectorAll('.detail-label')).find(label => 
+                    label.textContent.includes('Color:')
+                )?.nextElementSibling;
+                
+                if (styleNumberEl && colorEl) {
+                    // Rest of the code remains the same
+                    const styleNumber = styleNumberEl.textContent.trim().replace(/^Style #\s+/i, '');
+                    const color = colorEl.textContent.trim();
+                    // Initialize the group if it doesn't exist
+                    if (!styleGroups[styleNumber]) {
+                        styleGroups[styleNumber] = [];
+                    }
+                    
+                    // Add color and reference to element
+                    styleGroups[styleNumber].push({
+                        color: color,
+                        element: colorEl
+                    });
+                }
+            });
+            
+            // Now check each style group for different colors
+            for (const styleNumber in styleGroups) {
+                const group = styleGroups[styleNumber];
+                
+                // Only highlight if there's more than one color for the same style
+                if (group.length > 1) {
+                    // Check if colors are different
+                    const colors = group.map(item => item.color);
+                    const uniqueColors = [...new Set(colors)];
+                    
+                    // If we have multiple unique colors, highlight them all
+                    if (uniqueColors.length > 1) {
+                        group.forEach(item => {
+                            // Use the existing highlight-special-description class
+                            item.element.innerHTML = `<span class="highlight-special-description">${item.color}</span>`;
+                        });
+                    }
+                }
+            }
+        }
     });
 </script>    
 {% endblock %}
