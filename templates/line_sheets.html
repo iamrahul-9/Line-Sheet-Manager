@@ -577,6 +577,17 @@
         display: inline-block;
         border: 1px solid var(--primary-color);
     }
+    .highlight-special-description {
+        color: var(--primary-color);
+        font-weight: 600;
+        border-radius: 4px;
+        padding: 2px 2px;
+        border: 1px solid var(--primary-color);
+    }
+
+    .dark .highlight-special-description {
+        color: #fff; /* Change font color to white in dark mode */
+    }
 
     .dark .highlight-special-size {
         background-color: rgba(99, 102, 241, 0.2);
@@ -785,7 +796,7 @@
                 <div class="pswp__share-tooltip"></div>
             </div>
             <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)"></button>
-            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)"></button>
+            <button class="pswp__button--arrow--right" title="Next (arrow right)"></button>
             <div class="pswp__caption">
                 <div class="pswp__caption__center"></div>
             </div>
@@ -906,6 +917,17 @@
         // Add this function inside your DOMContentLoaded event handler
 function formatFabricDescription(description) {
     if (!description) return '';
+    
+    // Check for special product types to highlight (case insensitive)
+    const specialTypes = ["Pant", "Plazzo", "Reversible Plazzo", "Skirt"];
+    
+    // First check if it's a special product type that needs highlighting
+    for (const type of specialTypes) {
+        // Use case-insensitive comparison by converting both to lowercase
+        if (description.trim().toLowerCase() === type.toLowerCase()) {
+            return `<span class="highlight-special-description">${description}</span>`;
+        }
+    }
     
     // Check if this looks like a fabric composition (contains percentages)
     if (description.includes('%')) {
