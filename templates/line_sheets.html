@@ -917,17 +917,18 @@
         // Add this function inside your DOMContentLoaded event handler
 function formatFabricDescription(description) {
     if (!description) return '';
-    
-    // Check for special product types to highlight (case insensitive)
     const specialTypes = ["Reversible Plazzo", "Reversible Top", "Reversible Dress", "Reversible Skirt"];
-    
-    // First check if it's a special product type that needs highlighting
     for (const type of specialTypes) {
-        // Use case-insensitive comparison by converting both to lowercase
         if (description.trim().toLowerCase() === type.toLowerCase()) {
             return `<span class="highlight-special-description">${description}</span>`;
         }
     }
+    // Show fabric composition in one line
+    if (description.includes('%')) {
+        return `<span class="fabric-item">${description}</span>`;
+    }
+    return description;
+}
     
     // Check if this looks like a fabric composition (contains percentages)
     if (description.includes('%')) {
@@ -1519,4 +1520,5 @@ highlightSameStyleDifferentColors();
     });
 </script>    
 {% endblock %}
+
 
