@@ -179,6 +179,11 @@
         align-items: flex-start;
         color: var(--color-text-primary); /* Use primary color for better visibility */
         font-weight: 500; /* Slightly bolder */
+        font-size: 0.8em; /* Smaller font for fabric content */
+    }
+
+    .fabric-list {
+        font-size: 0.8em; /* Smaller font for fabric list */
     }
 
     .fabric-item:before {
@@ -914,50 +919,43 @@
             }
         });
 
-        // Add this function inside your DOMContentLoaded event handler
-function formatFabricDescription(description) {
-    if (!description) return '';
-    const specialTypes = ["Reversible Plazzo", "Reversible Top", "Reversible Dress", "Reversible Skirt"];
-    for (const type of specialTypes) {
-        if (description.trim().toLowerCase() === type.toLowerCase()) {
-            return `<span class="highlight-special-description">${description}</span>`;
-        }
-    }
-    // Show fabric composition in one line
-    if (description.includes('%')) {
-        return `<span class="fabric-item">${description}</span>`;
-    }
-    return description;
-}
-    
-    // Check if this looks like a fabric composition (contains percentages)
-    if (description.includes('%')) {
-        // Try to split by percentage pattern
-        const parts = description.split(/(\d+%\s*[A-Z]+(?:\s+[A-Z]+)*)/g)
-            .filter(part => part.trim().length > 0);
-        
-        if (parts.length > 1) {
-            return `<ul class="fabric-list">
-                ${parts.map(part => `<li class="fabric-item">${part.trim()}</li>`).join('')}
-            </ul>`;
-        }
-    }
-    
-    return description;
-}
 
-// After your existing code for parsing size ratios
-document.querySelectorAll('.detail-row').forEach(row => {
-    const label = row.querySelector('.detail-label');
-    if (label && label.textContent.includes('Description:')) {
-        row.classList.add('description-row');
-        const valueElement = row.querySelector('.detail-value');
-        if (valueElement) {
-            valueElement.classList.add('description-value');
-            valueElement.innerHTML = formatFabricDescription(valueElement.textContent);
+        // Restore: Format fabric description with bullet points for compositions, highlight for special types
+        function formatFabricDescription(description) {
+            if (!description) return '';
+            const specialTypes = ["Reversible Plazzo", "Reversible Top", "Reversible Dress", "Reversible Skirt"];
+            for (const type of specialTypes) {
+                if (description.trim().toLowerCase() === type.toLowerCase()) {
+                    return `<span class="highlight-special-description">${description}</span>`;
+                }
+            }
+            // If description contains any substring starting with a numeric percentage, show each on a new line
+            if (description.match(/\d+%/g)) {
+                // Split by percentage pattern, keep the % and following words together
+                const parts = description.match(/\d+%[^\d%]*/g);
+                if (parts && parts.length > 0) {
+                    return `<ul class="fabric-list">
+                        ${parts.map(part => `<li class="fabric-item">${part.trim()}</li>`).join('')}
+                    </ul>`;
+                }
+                // Fallback: show as single line
+                return `<span class="fabric-item">${description}</span>`;
+            }
+            return description;
         }
-    }
-});
+
+        // After your existing code for parsing size ratios
+        document.querySelectorAll('.detail-row').forEach(row => {
+            const label = row.querySelector('.detail-label');
+            if (label && label.textContent.includes('Description:')) {
+                row.classList.add('description-row');
+                const valueElement = row.querySelector('.detail-value');
+                if (valueElement) {
+                    valueElement.classList.add('description-value');
+                    valueElement.innerHTML = formatFabricDescription(valueElement.textContent);
+                }
+            }
+        });
 
 // Add this call here to highlight colors
 highlightSameStyleDifferentColors();
