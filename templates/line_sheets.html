@@ -821,36 +821,39 @@
             };
         });
 
-        // Parse size ratios
+        // Enhanced parseSizeRatios to support custom sizes
         function parseSizeRatios(sizeString) {
             if (!sizeString) return { isRatio: false, sizeString: "" };
-            
-            // Check if the string contains commas (size ratio format)
-            if (sizeString.includes(',')) {
-                const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
-                // Split by comma and handle empty values
-                const quantities = sizeString.split(',').map(num => {
-                    const trimmed = num.trim();
-                    return trimmed === '' ? 0 : parseInt(trimmed);
-                });
-                let total = 0;
-                
-                const ratios = sizes.map((size, index) => {
+
+            const quantities = sizeString.split(',').map(num => {
+                const trimmed = num.trim();
+                return trimmed === '' ? 0 : parseInt(trimmed);
+            });
+
+            let total = 0;
+            let sizes = [];
+            let ratios = [];
+
+            if (quantities.length === 5) {
+                sizes = ['S', 'M', 'L', 'XL', 'XXL'];
+            } else if (quantities.length === 2) {
+                sizes = ['M/L', 'L/XL'];
+            }
+
+            if (sizes.length > 0) {
+                ratios = sizes.map((size, index) => {
                     const quantity = quantities[index] || 0;
                     total += quantity;
-                    return {
-                        size,
-                        quantity
-                    };
+                    return { size, quantity };
                 });
-                
                 return {
                     isRatio: true,
                     ratios,
-                    total
+                    total,
+                    sizes
                 };
             } else {
-                // Regular size string format
+                // Not a recognized ratio format, treat as plain string
                 return {
                     isRatio: false,
                     sizeString
@@ -862,15 +865,14 @@
         document.querySelectorAll('.detail-value[data-size]').forEach(element => {
             const sizeString = element.getAttribute('data-size');
             const result = parseSizeRatios(sizeString);
-            
-            if (result.isRatio) {
-                // Keep the existing tabular display with highlight for size ratios
+
+            if (result.isRatio && result.sizes && result.sizes.length > 0) {
+                // Tabular display for ratios
                 let sizesHTML = `
                     <div class="size-details highlight-special-size full-width">
-                        <div class="sizes-grid">
+                        <div class="sizes-grid" style="grid-template-columns: repeat(${result.sizes.length}, 1fr);">
                 `;
-                
-                ['S', 'M', 'L', 'XL', 'XXL'].forEach((size, index) => {
+                result.sizes.forEach((size, index) => {
                     const quantity = result.ratios[index] ? result.ratios[index].quantity : 0;
                     sizesHTML += `
                         <div class="size-column">
@@ -879,13 +881,11 @@
                         </div>
                     `;
                 });
-                
                 sizesHTML += `
                         </div>
                         <div class="size-total">Total: ${result.total}</div>
                     </div>
                 `;
-                
                 // Update the parent detail-row structure for ratio display
                 const detailRow = element.closest('.detail-row');
                 if (detailRow) {
@@ -895,18 +895,14 @@
                         label.style.marginBottom = '8px';
                     }
                 }
-                
                 element.innerHTML = sizesHTML;
             } else {
-                // For standard size ranges
+                // For standard size ranges or unrecognized formats
                 if (sizeString.trim() === 'S-XXL') {
-                    // Don't apply highlight for S-XXL
                     element.innerHTML = sizeString;
                 } else {
-                    // Keep highlight for all other size formats
                     element.innerHTML = `<span class="highlight-special-size">${sizeString}</span>`;
                 }
-                
                 // Reset the parent detail-row to original grid layout
                 const detailRow = element.closest('.detail-row');
                 if (detailRow) {
