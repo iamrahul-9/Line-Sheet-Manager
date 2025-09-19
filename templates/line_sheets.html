@@ -701,19 +701,31 @@
 {% block header_title %}<h1 class="header-title">{{ title|upper }}</h1>{% endblock %}
 
 {% block header_actions %}
-<div class="sort-container main-container">
-    <label for="sort-select" class="sort-label">
-        <i class="fas fa-sort"></i>Sort by:
-    </label>
-    <select id="sort-select" class="sort-dropdown">
-        <option value="default">Default Order</option>
-        <option value="style-asc">Style No. (A to Z)</option>
-        <option value="style-desc">Style No. (Z to A)</option>
-        <option value="price-asc">Price (Low to High)</option>
-        <option value="price-desc">Price (High to Low)</option>
-        <option value="qty-asc">Qty (Low to High)</option>
-        <option value="qty-desc">Qty (High to Low)</option>
-    </select>
+<div class="flex items-center gap-4">
+    <div class="relative">
+        <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.817-4.817A6 6 0 012 8z" clip-rule="evenodd" />
+            </svg>
+        </span>
+        <input type="text" id="styleSearch" placeholder="Search for a style..." 
+               class="w-full pl-10 pr-4 py-2 border rounded-lg"
+               style="background-color: var(--color-input-bg); border-color: var(--color-border); color: var(--color-text-primary);">
+    </div>
+    <div class="sort-container">
+        <label for="sort-select" class="sort-label">
+            <i class="fas fa-sort"></i>Sort by:
+        </label>
+        <select id="sort-select" class="sort-dropdown">
+            <option value="default">Default Order</option>
+            <option value="style-asc">Style No. (A to Z)</option>
+            <option value="style-desc">Style No. (Z to A)</option>
+            <option value="price-asc">Price (Low to High)</option>
+            <option value="price-desc">Price (High to Low)</option>
+            <option value="qty-asc">Qty (Low to High)</option>
+            <option value="qty-desc">Qty (High to Low)</option>
+        </select>
+    </div>
 </div>
 {% endblock %}
 
@@ -724,7 +736,7 @@
 
 <div class="product-grid">
     {% for product in products %}
-    <div class="product-card">
+    <div class="product-card" data-style="{{ product[1] }}">
         <a href="{{ product[6] }}" class="image-container" data-size="1024x1024" 
            data-caption="Style #: {{ product[1] }} | Price: {% if product[9] %}${{ product[9] }}{% else %}${{ product[5] }}{% endif %}">
             <img src="{{ product[6] }}" 
@@ -770,6 +782,10 @@
     </div>
     {% endfor %}
 </div>
+<div id="no-results-styles" class="hidden text-center py-12">
+    <h3 class="text-lg font-medium mb-1" style="color: var(--color-text-primary);">No Matching Styles Found</h3>
+    <p style="color: var(--color-text-secondary);" class="max-w-md mx-auto">Try a different search term.</p>
+</div>
 
 <!-- PhotoSwipe Template -->
 <div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
@@ -813,6 +829,34 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const styleSearchInput = document.getElementById('styleSearch');
+        const productGrid = document.querySelector('.product-grid');
+        const noResultsMessage = document.getElementById('no-results-styles');
+        const productCards = productGrid ? Array.from(productGrid.querySelectorAll('.product-card')) : [];
+
+        if (styleSearchInput) {
+            styleSearchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                let visibleCount = 0;
+
+                productCards.forEach(card => {
+                    const style = card.dataset.style.toLowerCase();
+                    if (style.includes(searchTerm)) {
+                        card.style.display = '';
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                if (visibleCount === 0) {
+                    noResultsMessage.classList.remove('hidden');
+                } else {
+                    noResultsMessage.classList.add('hidden');
+                }
+            });
+        }
+
         // Error handling for images
         document.querySelectorAll('img[data-fallback]').forEach(img => {
             img.onerror = function() {

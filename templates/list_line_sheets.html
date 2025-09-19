@@ -70,20 +70,32 @@
 {% endblock %}
 
 {% block header_actions %}
-<a href="/" class="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-4 py-2 rounded-lg hover:from-indigo-600 hover:to-purple-600 transition-all shadow-sm hover:shadow-md" style="position: relative; z-index: 20;">
-  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-    <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
-  </svg>
-  Back to Home
-</a>
+<div class="flex items-center justify-between w-full gap-4">
+    <div class="relative">
+        <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.817-4.817A6 6 0 012 8z" clip-rule="evenodd" />
+            </svg>
+        </span>
+        <input type="text" id="lineSheetSearch" placeholder="Search for a line sheet..." 
+               class="w-full pl-10 pr-4 py-2 border rounded-lg"
+               style="background-color: var(--color-input-bg); border-color: var(--color-border); color: var(--color-text-primary);">
+    </div>
+    <a href="/" class="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-4 py-2 rounded-lg hover:from-indigo-600 hover:to-purple-600 transition-all shadow-sm hover:shadow-md" style="position: relative; z-index: 20;">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+        </svg>
+        Back to Home
+    </a>
+</div>
 {% endblock %}
 
 {% block content %}
 <div class="mt-4">
   {% if line_sheets %}
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" id="line-sheets-grid">
       {% for line_sheet in line_sheets %}
-        <div class="form-card h-full group">
+        <div class="form-card h-full group" data-title="{{ line_sheet[1] }}">
           <div class="flex justify-between items-start">
             <div class="flex-1">
               <h3 class="font-medium text-lg mb-1 group-hover:text-indigo-600 transition-colors dark:group-hover:text-indigo-400" style="color: var(--color-text-);">{{ line_sheet[1] }}</h3>
@@ -128,6 +140,10 @@
         </div>
       {% endfor %}
     </div>
+    <div id="no-results" class="hidden text-center py-12">
+        <h3 class="text-lg font-medium mb-1" style="color: var(--color-text-primary);">No Matching Line Sheets Found</h3>
+        <p style="color: var(--color-text-secondary);" class="max-w-md mx-auto">Try a different search term.</p>
+    </div>
   {% else %}
     <div class="flex flex-col items-center justify-center py-12 text-center">
       <div class="h-16 w-16 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-500 dark:text-purple-300 mb-4">
@@ -148,9 +164,36 @@
     }
   }
   
-  // Fix for touch devices
   document.addEventListener('DOMContentLoaded', function() {
-    // Ensure action buttons don't block other UI elements
+    const searchInput = document.getElementById('lineSheetSearch');
+    const lineSheetsGrid = document.getElementById('line-sheets-grid');
+    const noResultsMessage = document.getElementById('no-results');
+    const lineSheetCards = lineSheetsGrid ? Array.from(lineSheetsGrid.querySelectorAll('.form-card')) : [];
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            let visibleCount = 0;
+            
+            lineSheetCards.forEach(card => {
+                const title = card.dataset.title.toLowerCase();
+                if (title.includes(searchTerm)) {
+                    card.style.display = '';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            if (visibleCount === 0) {
+                noResultsMessage.classList.remove('hidden');
+            } else {
+                noResultsMessage.classList.add('hidden');
+            }
+        });
+    }
+
+    // Fix for touch devices
     document.querySelectorAll('.action-button').forEach(button => {
       button.addEventListener('click', function(e) {
         e.stopPropagation();
