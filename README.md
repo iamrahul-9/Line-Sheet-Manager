@@ -4,6 +4,10 @@ A web application to manage line sheets for fashion collections with Cloudinary 
 
 ## Recent Changes
 
+### September 19, 2025
+  - Added a global search feature to find line sheets and styles.
+  - Improved the UI by aligning the search bar in the header.
+
 ### May 7, 2025
   - Added some authetication
   - Added a feature to highlight some special descriptions 
@@ -134,7 +138,7 @@ A web application to manage line sheets for fashion collections with Cloudinary 
 
 ## Setup & Usage
 
-[Include setup and usage instructions here]
+[Detailed documentation on how to use this tool can be found here.](documentation.md)
 
 ### Tech Stack
 - Python Flask for backend
